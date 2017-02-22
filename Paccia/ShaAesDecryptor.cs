@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Paccia
 {
-    public class ShaAesDecryptor
+    public class ShaAesDecryptor : IDecryptor
     {
         readonly AesEncryptorDecryptor _encryptorDecryptor;
         readonly ShaHeaderGenerator _headerGenerator;

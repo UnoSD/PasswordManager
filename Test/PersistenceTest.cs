@@ -20,9 +20,9 @@ namespace Test
 
             configuration.GetAsync(ConfigurationKey.SecretsFilePath).Returns(filePath);
 
-            var binarySerializer = new BinarySerializer<IEnumerable<Secret>>();
+            var serializer = new BinarySerializer<IEnumerable<Secret>>();
 
-            var repository = new Repository<Secret>(configuration, binarySerializer, ConfigurationKey.SecretsFilePath);
+            var repository = new Repository<Secret>(configuration, serializer, ConfigurationKey.SecretsFilePath);
 
             await repository.SaveAsync(new[]
             {
@@ -38,7 +38,7 @@ namespace Test
             Secret[] secrets;
 
             using (var memoryStream = new MemoryStream(readAllBytes))
-                secrets = (await binarySerializer.DeserializeAsync(memoryStream)).ToArray();
+                secrets = (await serializer.DeserializeAsync(memoryStream)).ToArray();
 
             Assert.That(secrets.Length, Is.EqualTo(3));
         }

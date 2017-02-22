@@ -47,6 +47,8 @@ namespace Paccia
         {
             var filePath = await _storageFilePath;
 
+            // The serializer is a wrapper around sync code so using a memory stream first then
+            // copying to file to make it non-blocking on IO operation on file.
             using (var memoryStream = new MemoryStream())
             using (var fileStream = new FileInfo(filePath).OpenWrite())
             {
