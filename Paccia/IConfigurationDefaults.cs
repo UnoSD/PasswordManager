@@ -2,7 +2,7 @@
 
 namespace Paccia
 {
-    interface IConfigurationDefaults
+    public interface IConfigurationDefaults
     {
         IReadOnlyDictionary<ConfigurationKey, string> Values { get; }
     }

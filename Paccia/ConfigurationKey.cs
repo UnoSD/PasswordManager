@@ -1,6 +1,6 @@
 ﻿namespace Paccia
 {
-    enum ConfigurationKey
+    public enum ConfigurationKey
     {
         SecretsFilePath = 1
     }

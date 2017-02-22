@@ -55,3 +55,5 @@ using System.Windows;
 
 [assembly: InternalsVisibleTo("Test")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
+[assembly: InternalsVisibleTo("StructureMap.AutoMocking")]
+[assembly: InternalsVisibleTo("StructureMap")]

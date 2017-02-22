@@ -9,18 +9,19 @@ namespace Paccia
 {
     public partial class MainWindow
     {
+        readonly Repository<Secret> _repository;
         IReadOnlyCollection<Secret> _readOnlyCollection;
 
-        public MainWindow()
+        public MainWindow(Repository<Secret> repository)
         {
+            _repository = repository;
+
             InitializeComponent();
         }
 
         async void MainWindowOnActivated(object sender, EventArgs e)
         {
-            var repository = new Repository<Secret>(new Configuration(new HardcodedConfigurationDefaults()), new BinarySerializer<IEnumerable<Secret>>(), ConfigurationKey.SecretsFilePath);
-
-            _readOnlyCollection = await repository.LoadAsync();
+            _readOnlyCollection = await _repository.LoadAsync();
 
             PasswordListView.ItemsSource = _readOnlyCollection;
         }
@@ -65,10 +66,8 @@ namespace Paccia
             var secret = addSecret.CreateSecret();
 
             _readOnlyCollection = _readOnlyCollection.Concat(new[] { secret }).ToArray();
-
-            var repository = new Repository<Secret>(new Configuration(new HardcodedConfigurationDefaults()), new BinarySerializer<IEnumerable<Secret>>(), ConfigurationKey.SecretsFilePath);
-
-            await repository.SaveAsync(_readOnlyCollection);
+            
+            await _repository.SaveAsync(_readOnlyCollection);
 
             PasswordListView.ItemsSource = _readOnlyCollection;
         }

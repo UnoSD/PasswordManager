@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace Paccia
 {
-    class Configuration : IConfiguration
+    public class Configuration : IConfiguration
     {
         readonly IConfigurationDefaults _defaults;
 

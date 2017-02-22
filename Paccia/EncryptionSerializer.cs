@@ -11,6 +11,8 @@ namespace Paccia
         readonly string _passphrase;
         readonly string _salt;
 
+        // To match the ISerializer<T> interface we must take passphrase and salt as parameter
+        // restricting the usages of this class' instances.
         public EncryptionSerializer(ISerializer<T> serializer, IEncryptor encryptor, IDecryptor decryptor, string passphrase, string salt)
         {
             _serializer = serializer;

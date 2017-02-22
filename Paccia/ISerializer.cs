@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace Paccia
 {
-    interface ISerializer<T>
+    public interface ISerializer<T>
     {
         Task<T> DeserializeAsync(Stream sourceStream);
         Task SerializeAsync(Stream destinationStream, T data);

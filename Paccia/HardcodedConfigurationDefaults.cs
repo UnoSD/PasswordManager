@@ -2,7 +2,7 @@
 
 namespace Paccia
 {
-    class HardcodedConfigurationDefaults : IConfigurationDefaults
+    public class HardcodedConfigurationDefaults : IConfigurationDefaults
     {
         public IReadOnlyDictionary<ConfigurationKey, string> Values => new Dictionary<ConfigurationKey, string>
         {

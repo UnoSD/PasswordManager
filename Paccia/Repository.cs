@@ -9,11 +9,13 @@ namespace Paccia
     public class Repository<T>
     {
         readonly ISerializer<IEnumerable<T>> _serializer;
+        readonly Logger _logger;
         readonly Lazy<Task<string>> _storageFilePath;
 
-        internal Repository(IConfiguration configuration, ISerializer<IEnumerable<T>> serializer, ConfigurationKey filePathConfigurationKey)
+        public Repository(IConfiguration configuration, ISerializer<IEnumerable<T>> serializer, ConfigurationKey filePathConfigurationKey, Logger logger)
         {
             _serializer = serializer;
+            _logger = logger;
             _storageFilePath  = new Lazy<Task<string>>(() => configuration.GetAsync(filePathConfigurationKey));
         }
 
@@ -25,7 +27,7 @@ namespace Paccia
 
             if (!fileInfo.Exists)
             {
-                Logger.Log("File not found");
+                _logger.Log("File not found");
 
                 return new T[0];
             }
