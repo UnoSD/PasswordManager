@@ -6,20 +6,20 @@ using System.Threading.Tasks;
 
 namespace Paccia
 {
-    public class PasswordRepository
+    public class Repository<T>
     {
-        readonly ISerializer<IEnumerable<Secret>> _serializer;
-        readonly Lazy<Task<string>> _secretsFilePath;
+        readonly ISerializer<IEnumerable<T>> _serializer;
+        readonly Lazy<Task<string>> _storageFilePath;
 
-        internal PasswordRepository(IConfiguration configuration, ISerializer<IEnumerable<Secret>> serializer)
+        internal Repository(IConfiguration configuration, ISerializer<IEnumerable<T>> serializer, ConfigurationKey filePathConfigurationKey)
         {
             _serializer = serializer;
-            _secretsFilePath  = new Lazy<Task<string>>(() => configuration.GetAsync(ConfigurationKey.SecretsFilePath));
+            _storageFilePath  = new Lazy<Task<string>>(() => configuration.GetAsync(filePathConfigurationKey));
         }
 
-        public async Task<IReadOnlyCollection<Secret>> LoadPasswordsAsync()
+        public async Task<IReadOnlyCollection<T>> LoadAsync()
         {
-            var filePath = await _secretsFilePath;
+            var filePath = await _storageFilePath;
 
             var fileInfo = new FileInfo(filePath);
 
@@ -27,7 +27,7 @@ namespace Paccia
             {
                 Logger.Log("File not found");
 
-                return new Secret[0];
+                return new T[0];
             }
             
             using (var fileStream = fileInfo.OpenRead())
@@ -37,20 +37,20 @@ namespace Paccia
 
                 memoryStream.Position = 0;
 
-                var secrets = await _serializer.DeserializeAsync(memoryStream).ConfigureAwait(false);
+                var entities = await _serializer.DeserializeAsync(memoryStream).ConfigureAwait(false);
 
-                return secrets.ToArray();
+                return entities.ToArray();
             }
         }
         
-        public async Task SavePasswordsAsync(IEnumerable<Secret> passwords)
+        public async Task SaveAsync(IEnumerable<T> entities)
         {
-            var filePath = await _secretsFilePath;
+            var filePath = await _storageFilePath;
 
             using (var memoryStream = new MemoryStream())
             using (var fileStream = new FileInfo(filePath).OpenWrite())
             {
-                await _serializer.SerializeAsync(memoryStream, passwords).ConfigureAwait(false);
+                await _serializer.SerializeAsync(memoryStream, entities).ConfigureAwait(false);
 
                 memoryStream.Position = 0;
                    

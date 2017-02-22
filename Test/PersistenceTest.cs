@@ -22,9 +22,9 @@ namespace Test
 
             var binarySerializer = new BinarySerializer<IEnumerable<Secret>>();
 
-            var repository = new PasswordRepository(configuration, binarySerializer);
+            var repository = new Repository<Secret>(configuration, binarySerializer, ConfigurationKey.SecretsFilePath);
 
-            await repository.SavePasswordsAsync(new[]
+            await repository.SaveAsync(new[]
             {
                 new Secret { Description = "Primo" },
                 new Secret { Description = "Secondo" },

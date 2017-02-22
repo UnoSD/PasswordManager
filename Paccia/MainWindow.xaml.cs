@@ -18,9 +18,9 @@ namespace Paccia
 
         async void MainWindowOnActivated(object sender, EventArgs e)
         {
-            var repository = new PasswordRepository(new Configuration(new HardcodedConfigurationDefaults()), new BinarySerializer<IEnumerable<Secret>>());
+            var repository = new Repository<Secret>(new Configuration(new HardcodedConfigurationDefaults()), new BinarySerializer<IEnumerable<Secret>>(), ConfigurationKey.SecretsFilePath);
 
-            _readOnlyCollection = await repository.LoadPasswordsAsync();
+            _readOnlyCollection = await repository.LoadAsync();
 
             PasswordListView.ItemsSource = _readOnlyCollection;
         }
@@ -66,9 +66,9 @@ namespace Paccia
 
             _readOnlyCollection = _readOnlyCollection.Concat(new[] { secret }).ToArray();
 
-            var repository = new PasswordRepository(new Configuration(new HardcodedConfigurationDefaults()), new BinarySerializer<IEnumerable<Secret>>());
+            var repository = new Repository<Secret>(new Configuration(new HardcodedConfigurationDefaults()), new BinarySerializer<IEnumerable<Secret>>(), ConfigurationKey.SecretsFilePath);
 
-            await repository.SavePasswordsAsync(_readOnlyCollection);
+            await repository.SaveAsync(_readOnlyCollection);
 
             PasswordListView.ItemsSource = _readOnlyCollection;
         }
