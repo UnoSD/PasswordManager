@@ -10,6 +10,7 @@ namespace Paccia
     {
         public App()
         {
+            DispatcherUnhandledException += HandleUiUnhandledException;
             AppDomain.CurrentDomain.UnhandledException += HandleUnhandledException;
         }
 
