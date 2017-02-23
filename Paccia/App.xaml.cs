@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Threading;
 using StructureMap;
 using StructureMap.Graph;
-using StructureMap.Pipeline;
 
 namespace Paccia
 {
@@ -36,31 +34,14 @@ namespace Paccia
         static void SetupContainer(ConfigurationExpression configuration)
         {
             configuration.Scan(ScannerConfiguration);
-
-            configuration.ForConcreteType<Repository<Secret>>()
-                         .Configure
-                         .Singleton()
-                         .Ctor<ConfigurationKey>()
-                         .Is(ConfigurationKey.SecretsFilePath)
-                         .Ctor<ISerializer<IEnumerable<Secret>>>()
-                         .Is<EncryptionSerializer<IEnumerable<Secret>>>(EncryptionSerializerInstance);
+            configuration.For(typeof(ISerializer<>)).Singleton().Use(typeof(BinarySerializer<>));
         }
-
-        static void EncryptionSerializerInstance(SmartInstance<EncryptionSerializer<IEnumerable<Secret>>, ISerializer<IEnumerable<Secret>>> instance) =>
-                instance.Singleton()
-                        .Ctor<string>("passphrase")
-                        .Is("temporarypassphrase")
-                        .Ctor<string>("salt")
-                        .Is(Environment.MachineName)
-                        .Ctor<ISerializer<IEnumerable<Secret>>>()
-                        .Is<BinarySerializer<IEnumerable<Secret>>>();
 
         static void ScannerConfiguration(IAssemblyScanner scanner)
         {
             scanner.TheCallingAssembly();
             scanner.SingleImplementationsOfInterface();
             scanner.WithDefaultConventions();
-            scanner.ConnectImplementationsToTypesClosing(typeof(Repository<>));
             // Using OnAddedPluginType doesn't make concrete types singletons by default.
             scanner.With(new SingletonConvention());
         }

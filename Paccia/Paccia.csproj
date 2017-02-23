@@ -65,7 +65,9 @@
     </Compile>
     <Compile Include="AesEncryptorDecryptor.cs" />
     <Compile Include="ByteExtensions.cs" />
+    <Compile Include="EncryptedRepositoryFactory.cs" />
     <Compile Include="EncryptionSerializer.cs" />
+    <Compile Include="EncryptionSerializersFactory.cs" />
     <Compile Include="IDecryptor.cs" />
     <Compile Include="IEncryptor.cs" />
     <Compile Include="ShaAesEncryptor.cs" />
