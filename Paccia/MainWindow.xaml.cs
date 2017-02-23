@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 
 namespace Paccia
 {
@@ -55,15 +54,6 @@ namespace Paccia
                 PasswordListView.ItemsSource = itemsSource;
         }
 
-        void FieldsListViewOnMouseDoubleClick(object sender, MouseButtonEventArgs e)
-        {
-            var selectedItem = (KeyValuePair<string, string>)FieldsListView.SelectedItem;
-
-            Clipboard.SetText(selectedItem.Value);
-
-            Title = $"Copied {selectedItem.Key}";
-        }
-
         async void AddSecretButtonOnClick(object sender, RoutedEventArgs e)
         {
             var addSecret = new AddSecretWindow();
@@ -75,6 +65,26 @@ namespace Paccia
             await GetRepository(_passphrase).SaveAsync(_readOnlyCollection);
 
             PasswordListView.ItemsSource = _readOnlyCollection;
+        }
+
+        void ShowSecretButtonOnClick(object sender, RoutedEventArgs e) => SecretTextBox.Visibility = Visibility.Visible;
+
+        void CopySecretButtonOnClick(object sender, RoutedEventArgs e)
+        {
+            var selectedItem = (KeyValuePair<string, string>)FieldsListView.SelectedItem;
+            
+            Clipboard.SetText(selectedItem.Value);
+
+            Title = $"Copied {selectedItem.Key}";
+        }
+
+        void FieldsListViewOnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var selectedItem = FieldsListView.SelectedItem as KeyValuePair<string, string>?;
+
+            SecretTextBox.Visibility = Visibility.Hidden;
+
+            SecretTextBox.Text = selectedItem?.Value;
         }
     }
 }
