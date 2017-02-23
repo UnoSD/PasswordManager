@@ -5,7 +5,6 @@ using System.Security;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 
 namespace Paccia
 {
@@ -24,12 +23,7 @@ namespace Paccia
 
         Repository<Secret> GetRepository(string passphrase) => _repositoryFactory.GetRepository(passphrase, Environment.MachineName, ConfigurationKey.SecretsFilePath);
 
-        void MainWindowOnLoaded(object sender, EventArgs e)
-        {
-            InputBox.Visibility = Visibility.Visible;
-
-            MasterPasswordBox.Focus();
-        }
+        void MainWindowOnLoaded(object sender, EventArgs e) => MasterPasswordInputBox.Show();
 
         void EntryListViewOnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -114,31 +108,24 @@ namespace Paccia
             SecretTextBox.Text = selectedItem?.Value;
         }
         
-        async void OkButtonOnClick(object sender, RoutedEventArgs e) => await LoadAndPopulateList();
-
-        async Task LoadAndPopulateList()
+        async Task LoadAndPopulateList(SecureString passphrase)
         {
             // Use keylogger prevention.
             // Maybe: 1-3-5 character of the passphrase first
             // then 2-4-6...
-            _passphrase = MasterPasswordBox.SecurePassword;
+            _passphrase = passphrase;
+
+            IsEnabled = false;
 
             _readOnlyCollection = await GetRepository(_passphrase.ToClearString()).LoadAsync();
 
             EntryListView.ItemsSource = _readOnlyCollection;
 
-            InputBox.Visibility = Visibility.Collapsed;
+            IsEnabled = true;
         }
+        
+        async void MasterPasswordInputBoxPasswordInserted(object sender, SecureString e) => await LoadAndPopulateList(e);
 
-        void CancelButtonOnClick(object sender, RoutedEventArgs e) => Close();
-
-        async void MasterPasswordBoxOnKeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.Key == Key.Enter)
-                await LoadAndPopulateList();
-
-            if (e.Key == Key.Escape)
-                Close();
-        }
+        void MasterPasswordInputBoxOnCancel(object sender, EventArgs e) => Close();
     }
 }
