@@ -70,6 +70,7 @@
     <Compile Include="EncryptionSerializersFactory.cs" />
     <Compile Include="IDecryptor.cs" />
     <Compile Include="IEncryptor.cs" />
+    <Compile Include="SecureStringExtensions.cs" />
     <Compile Include="ShaAesEncryptor.cs" />
     <Compile Include="Encryption.cs" />
     <Compile Include="ISerializer.cs" />

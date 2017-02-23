@@ -96,6 +96,43 @@
                 </GridView>
             </ListView.View>
         </ListView>
+        <Grid x:Name="InputBox" 
+              Visibility="Visible">
+            <Grid Background="Black" 
+                  Opacity="0.5"/>
+            <Border MinWidth="250"
+                    Background="DarkOrange" 
+                    BorderBrush="Orange" 
+                    BorderThickness="1" 
+                    CornerRadius="0,55,0,55" 
+                    HorizontalAlignment="Center" 
+                    VerticalAlignment="Center">
+                <StackPanel>
+                    <TextBlock Margin="5"
+                               Text="Insert master password:"
+                               HorizontalAlignment="Center"/>
+                    <PasswordBox MinWidth="10"
+                                 HorizontalAlignment="Center"
+                                 VerticalAlignment="Center"
+                                 x:Name="MasterPasswordBox"
+                                 KeyDown="MasterPasswordBoxOnKeyDown"
+                                 MaxWidth="200"/>
+                    <StackPanel Orientation="Horizontal" 
+                                HorizontalAlignment="Center">
+                        <Button x:Name="OkButton"
+                                Margin="5" 
+                                Content="OK"
+                                Background="{x:Null}"
+                                Click="OkButtonOnClick"/>
+                        <Button x:Name="CancelButton"
+                                Margin="5"
+                                Content="Cancel"
+                                Background="{x:Null}"
+                                Click="CancelButtonOnClick" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
     </Grid>
 </Window>
 

@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace Paccia
 {
@@ -10,7 +13,7 @@ namespace Paccia
     {
         readonly EncryptedRepositoryFactory<Secret> _repositoryFactory;
         IReadOnlyCollection<Secret> _readOnlyCollection;
-        string _passphrase;
+        SecureString _passphrase;
 
         public MainWindow(EncryptedRepositoryFactory<Secret> repositoryFactory)
         {
@@ -21,16 +24,11 @@ namespace Paccia
 
         Repository<Secret> GetRepository(string passphrase) => _repositoryFactory.GetRepository(passphrase, Environment.MachineName, ConfigurationKey.SecretsFilePath);
 
-        async void MainWindowOnLoaded(object sender, EventArgs e)
+        void MainWindowOnLoaded(object sender, EventArgs e)
         {
-            // Use keylogger prevention.
-            // Maybe: 1-3-5 character of the passphrase first
-            // then 2-4-6...
-            _passphrase = "Passphrase from user input";
+            InputBox.Visibility = Visibility.Visible;
 
-            _readOnlyCollection = await GetRepository(_passphrase).LoadAsync();
-
-            EntryListView.ItemsSource = _readOnlyCollection;
+            MasterPasswordBox.Focus();
         }
 
         void EntryListViewOnSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -69,8 +67,8 @@ namespace Paccia
             var secret = addSecret.CreateSecret();
 
             _readOnlyCollection = _readOnlyCollection.Concat(new[] { secret }).ToArray();
-            
-            await GetRepository(_passphrase).SaveAsync(_readOnlyCollection);
+
+            await GetRepository(_passphrase.ToClearString()).SaveAsync(_readOnlyCollection);
 
             EntryListView.ItemsSource = _readOnlyCollection;
         }
@@ -82,7 +80,7 @@ namespace Paccia
             var item = FieldsListView.SelectedItem ?? SecretsListView.SelectedItem;
 
             var selectedItem = (KeyValuePair<string, string>)item;
-            
+
             Clipboard.SetText(SecretTextBox.Text);
 
             Title = $"Copied {selectedItem.Key}";
@@ -114,6 +112,33 @@ namespace Paccia
             SecretTextBox.Visibility = Visibility.Hidden;
 
             SecretTextBox.Text = selectedItem?.Value;
+        }
+        
+        async void OkButtonOnClick(object sender, RoutedEventArgs e) => await LoadAndPopulateList();
+
+        async Task LoadAndPopulateList()
+        {
+            // Use keylogger prevention.
+            // Maybe: 1-3-5 character of the passphrase first
+            // then 2-4-6...
+            _passphrase = MasterPasswordBox.SecurePassword;
+
+            _readOnlyCollection = await GetRepository(_passphrase.ToClearString()).LoadAsync();
+
+            EntryListView.ItemsSource = _readOnlyCollection;
+
+            InputBox.Visibility = Visibility.Collapsed;
+        }
+
+        void CancelButtonOnClick(object sender, RoutedEventArgs e) => Close();
+
+        async void MasterPasswordBoxOnKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+                await LoadAndPopulateList();
+
+            if (e.Key == Key.Escape)
+                Close();
         }
     }
 }
