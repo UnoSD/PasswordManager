@@ -21,37 +21,45 @@ namespace Paccia
 
         Repository<Secret> GetRepository(string passphrase) => _repositoryFactory.GetRepository(passphrase, Environment.MachineName, ConfigurationKey.SecretsFilePath);
 
-        async void MainWindowOnActivated(object sender, EventArgs e)
+        async void MainWindowOnLoaded(object sender, EventArgs e)
         {
+            // Use keylogger prevention.
+            // Maybe: 1-3-5 character of the passphrase first
+            // then 2-4-6...
             _passphrase = "Passphrase from user input";
 
             _readOnlyCollection = await GetRepository(_passphrase).LoadAsync();
 
-            PasswordListView.ItemsSource = _readOnlyCollection;
+            EntryListView.ItemsSource = _readOnlyCollection;
         }
 
-        void PasswordListViewOnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        void EntryListViewOnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var secrets = e.AddedItems.Cast<Secret>().ToArray();
 
-            if (secrets.Length > 0)
-                FieldsListView.ItemsSource = secrets.First().Fields.Concat(secrets.First().Secrets);
+            if (secrets.Length != 1)
+                return;
+
+            var secret = secrets.First();
+
+            FieldsListView.ItemsSource = secret.Fields;
+            SecretsListView.ItemsSource = secret.Secrets;
         }
 
-        void PasswordSearchTextBoxOnTextChanged(object sender, TextChangedEventArgs e)
+        void EntrySearchTextBoxOnTextChanged(object sender, TextChangedEventArgs e)
         {
-            if (PasswordSearchTextBox.Text.Length < 1)
+            if (EntrySearchTextBox.Text.Length < 1)
             {
-                PasswordListView.ItemsSource = _readOnlyCollection;
+                EntryListView.ItemsSource = _readOnlyCollection;
                 return;
             }
 
-            var lower = PasswordSearchTextBox.Text.ToLower();
+            var lower = EntrySearchTextBox.Text.ToLower();
 
             var itemsSource = _readOnlyCollection?.Where(secret => secret.Description.ToLower().Contains(lower));
 
-            if (PasswordListView != null)
-                PasswordListView.ItemsSource = itemsSource;
+            if (EntryListView != null)
+                EntryListView.ItemsSource = itemsSource;
         }
 
         async void AddSecretButtonOnClick(object sender, RoutedEventArgs e)
@@ -64,23 +72,44 @@ namespace Paccia
             
             await GetRepository(_passphrase).SaveAsync(_readOnlyCollection);
 
-            PasswordListView.ItemsSource = _readOnlyCollection;
+            EntryListView.ItemsSource = _readOnlyCollection;
         }
 
         void ShowSecretButtonOnClick(object sender, RoutedEventArgs e) => SecretTextBox.Visibility = Visibility.Visible;
 
         void CopySecretButtonOnClick(object sender, RoutedEventArgs e)
         {
-            var selectedItem = (KeyValuePair<string, string>)FieldsListView.SelectedItem;
+            var item = FieldsListView.SelectedItem ?? SecretsListView.SelectedItem;
+
+            var selectedItem = (KeyValuePair<string, string>)item;
             
-            Clipboard.SetText(selectedItem.Value);
+            Clipboard.SetText(SecretTextBox.Text);
 
             Title = $"Copied {selectedItem.Key}";
         }
 
         void FieldsListViewOnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (e.AddedItems.Count < 1)
+                return;
+
+            SecretsListView.SelectedItem = null;
+
             var selectedItem = FieldsListView.SelectedItem as KeyValuePair<string, string>?;
+
+            SecretTextBox.Text = selectedItem?.Value;
+
+            SecretTextBox.Visibility = Visibility.Visible;
+        }
+
+        void SecretsListViewOnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (e.AddedItems.Count < 1)
+                return;
+
+            FieldsListView.SelectedItem = null;
+
+            var selectedItem = SecretsListView.SelectedItem as KeyValuePair<string, string>?;
 
             SecretTextBox.Visibility = Visibility.Hidden;
 
