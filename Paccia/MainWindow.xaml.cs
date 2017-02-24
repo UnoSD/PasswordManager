@@ -13,7 +13,6 @@ namespace Paccia
         readonly EncryptedRepositoryFactory<Secret> _repositoryFactory;
         IList<Secret> _secrets;
         SecureString _passphrase;
-        string _selected;
 
         public MainWindow(EncryptedRepositoryFactory<Secret> repositoryFactory)
         {
@@ -22,7 +21,7 @@ namespace Paccia
             InitializeComponent();
         }
 
-        Repository<Secret> GetRepository(string passphrase) => 
+        Repository<Secret> GetRepository(string passphrase) =>
             _repositoryFactory.GetRepository(passphrase, Environment.MachineName, ConfigurationKey.SecretsFilePath);
 
         async void MainWindowOnLoaded(object sender, EventArgs e) =>
@@ -80,11 +79,11 @@ namespace Paccia
             var searchText = EntrySearchTextBox.Text.ToLowerInvariant();
 
             var filteredSecrets = _secrets?.Where(secret => secret.Description.ToLowerInvariant().Contains(searchText));
-            
+
             EntryListView.ItemsSource = filteredSecrets;
         }
 
-        async void AddSecretButtonOnClick(object sender, RoutedEventArgs e) => 
+        async void AddSecretButtonOnClick(object sender, RoutedEventArgs e) =>
             await DisableUserInteractionsWhile(async () =>
             {
                 var secret = await AddSecretBox.CreateSecretAsync();
@@ -99,15 +98,7 @@ namespace Paccia
                 EntryListView.Items.Refresh();
             });
 
-        void ShowSecretButtonOnClick(object sender, RoutedEventArgs e) => ShowSelectedValue();
-
-        void ShowSelectedValue()
-        {
-            SecretTextBox.Text = _selected;
-            SecretTextBox.Visibility = Visibility.Visible;
-            CopySecretButton.IsEnabled = true;
-            ShowSecretButton.IsEnabled = false;
-        }
+        void ShowSecretButtonOnClick(object sender, RoutedEventArgs e) => SetShownState();
 
         void CopySecretButtonOnClick(object sender, RoutedEventArgs e)
         {
@@ -119,47 +110,67 @@ namespace Paccia
 
             Title = $"Copied {selectedItem.Key}";
         }
+        
+        void FieldsListViewOnSelectionChanged(object sender, SelectionChangedEventArgs e) => SetState(State.FieldSelected);
 
-        string GetActiveSelectedValueAndClearOthers(ListBox active, ListBox inactive)
+        void SecretsListViewOnSelectionChanged(object sender, SelectionChangedEventArgs e) => SetState(State.SecretSelected);
+
+        enum State
         {
-            var activeSelected = active.SelectedItems.Cast<KeyValuePair<string, string>>().ToArray();
-            var inactiveSelected = inactive.SelectedItems.Cast<KeyValuePair<string, string>>().ToArray();
+            NothingSelected,
+            FieldSelected,
+            SecretSelected,
+            SecretSelectedShown
+        }
 
-            if (activeSelected.Length != 1 && inactiveSelected.Length != 1)
+        void SetShownState() => SetState(true, 0);
+
+        void SetState(State last) => SetState(false, last);
+
+        void SetState(bool shown, State last)
+        {
+            var selectedFields = FieldsListView.SelectedItems.Cast<KeyValuePair<string, string>>().ToArray();
+            var selectedSecrets = SecretsListView.SelectedItems.Cast<KeyValuePair<string, string>>().ToArray();
+
+            var currentState = selectedSecrets.Any() && selectedFields.Any() ?
+                               last :
+                               selectedFields.Any() ?
+                                   State.FieldSelected :
+                                   selectedSecrets.Any() ?
+                                   shown ?
+                                       State.SecretSelectedShown :
+                                       State.SecretSelected :
+                                   State.NothingSelected;
+
+            switch (currentState)
             {
-                ShowSecretButton.IsEnabled = false;
-                CopySecretButton.IsEnabled = false;
-                SecretTextBox.Text = null;
-                SecretTextBox.Visibility = Visibility.Hidden;
-
-                return null;
+                case State.NothingSelected:
+                    SecretTextBox.Text = null;
+                    SecretTextBox.Visibility = Visibility.Hidden;
+                    ShowSecretButton.IsEnabled = false;
+                    CopySecretButton.IsEnabled = false;
+                    break;
+                case State.FieldSelected:
+                    SecretsListView.SelectedItem = null;
+                    SecretTextBox.Text = selectedFields.Single().Value;
+                    SecretTextBox.Visibility = Visibility.Visible;
+                    ShowSecretButton.IsEnabled = false;
+                    CopySecretButton.IsEnabled = true;
+                    break;
+                case State.SecretSelected:
+                    FieldsListView.SelectedItem = null;
+                    SecretTextBox.Text = null;
+                    SecretTextBox.Visibility = Visibility.Hidden;
+                    ShowSecretButton.IsEnabled = true;
+                    CopySecretButton.IsEnabled = true;
+                    break;
+                case State.SecretSelectedShown:
+                    SecretTextBox.Text = selectedSecrets.Single().Value;
+                    SecretTextBox.Visibility = Visibility.Visible;
+                    ShowSecretButton.IsEnabled = false;
+                    CopySecretButton.IsEnabled = true;
+                    break;
             }
-
-            if (!activeSelected.Any())
-                return null;
-
-            inactive.SelectedItem = null;
-
-            return activeSelected.Single().Value;
-        }
-
-        void FieldsListViewOnSelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            _selected = GetActiveSelectedValueAndClearOthers(FieldsListView, SecretsListView);
-
-            if (_selected == null)
-                return;
-
-            ShowSelectedValue();
-        }
-
-        void SecretsListViewOnSelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            _selected = GetActiveSelectedValueAndClearOthers(SecretsListView, FieldsListView);
-
-            SecretTextBox.Visibility = Visibility.Hidden;
-            ShowSecretButton.IsEnabled = true;
-            CopySecretButton.IsEnabled = true;
         }
     }
 }
