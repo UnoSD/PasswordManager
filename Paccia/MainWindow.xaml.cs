@@ -60,11 +60,14 @@ namespace Paccia
             
             var secret = await AddSecretBox.CreateSecretAsync();
 
-            _readOnlyCollection = _readOnlyCollection.Concat(new[] { secret }).ToArray();
+            if (secret != null)
+            {
+                _readOnlyCollection = _readOnlyCollection.Concat(new[] { secret }).ToArray();
 
-            await GetRepository(_passphrase.ToClearString()).SaveAsync(_readOnlyCollection);
+                await GetRepository(_passphrase.ToClearString()).SaveAsync(_readOnlyCollection);
 
-            EntryListView.ItemsSource = _readOnlyCollection;
+                EntryListView.ItemsSource = _readOnlyCollection;
+            }
 
             MainContent.IsEnabled = true;
         }

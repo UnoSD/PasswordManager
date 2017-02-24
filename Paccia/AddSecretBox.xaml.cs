@@ -12,6 +12,7 @@ namespace Paccia
         readonly Dictionary<string, string> _fields = new Dictionary<string, string>();
 
         readonly AutoResetEvent _resetEvent = new AutoResetEvent(false);
+        bool _save;
 
         public AddSecretBox()
         {
@@ -27,11 +28,16 @@ namespace Paccia
 
             Visibility = Visibility.Visible;
 
+            DescriptionTextBox.Focus();
+
             await _resetEvent.WaitOneAsync();
 
             _resetEvent.Reset();
 
             Visibility = Visibility.Collapsed;
+
+            if (!_save)
+                return null;
 
             var secret = new Secret
             {
@@ -48,12 +54,12 @@ namespace Paccia
         }
 
         void AddSecretButtonOnClick(object sender, RoutedEventArgs e) =>
-            CheckAndAdd(_secrets, SecretNameTextBox, SecretPasswordTextBox);
+            CheckAndAdd(_secrets, SecretNameTextBox, SecretPasswordTextBox.Password);
 
         void AddFieldButtonOnClick(object sender, RoutedEventArgs e) =>
-            CheckAndAdd(_fields, FieldNameTextBox, FieldValueTextBox);
+            CheckAndAdd(_fields, FieldNameTextBox, FieldValueTextBox.Text);
 
-        void CheckAndAdd(IDictionary<string, string> dictionary, TextBox keyBox, TextBox valueBox)
+        void CheckAndAdd(IDictionary<string, string> dictionary, TextBox keyBox, string value)
         {
             if (dictionary.ContainsKey(keyBox.Text))
             {
@@ -62,12 +68,21 @@ namespace Paccia
                 return;
             }
 
-            dictionary.Add(keyBox.Text, valueBox.Text);
+            dictionary.Add(keyBox.Text, value);
 
             FieldsListView.Items.Refresh();
             SecretsListView.Items.Refresh();
         }
 
-        void SaveButtonOnClick(object sender, RoutedEventArgs e) => _resetEvent.Set();
+        void SaveButtonOnClick(object sender, RoutedEventArgs e) => Exit(true);
+
+        void CancelButtonOnClick(object sender, RoutedEventArgs e) => Exit(false);
+
+        void Exit(bool saveOnExit)
+        {
+            _save = saveOnExit;
+
+            _resetEvent.Set();
+        }
     }
 }

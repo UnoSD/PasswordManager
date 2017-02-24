@@ -102,8 +102,7 @@
                                 PasswordInserted="MasterPasswordInputBoxPasswordInserted"
                                 Cancel="MasterPasswordInputBoxOnCancel"
                                 Visibility="Collapsed"/>
-        <local:AddSecretBox x:Name="AddSecretBox" 
-                            Background="DarkOrange"
+        <local:AddSecretBox x:Name="AddSecretBox"
                             Visibility="Collapsed"/>
     </Grid>
 </Window>
