@@ -11,8 +11,9 @@ namespace Paccia
     public partial class MainWindow
     {
         readonly EncryptedRepositoryFactory<Secret> _repositoryFactory;
-        IReadOnlyCollection<Secret> _readOnlyCollection;
+        IList<Secret> _secrets;
         SecureString _passphrase;
+        string _selected;
 
         public MainWindow(EncryptedRepositoryFactory<Secret> repositoryFactory)
         {
@@ -21,58 +22,92 @@ namespace Paccia
             InitializeComponent();
         }
 
-        Repository<Secret> GetRepository(string passphrase) => _repositoryFactory.GetRepository(passphrase, Environment.MachineName, ConfigurationKey.SecretsFilePath);
+        Repository<Secret> GetRepository(string passphrase) => 
+            _repositoryFactory.GetRepository(passphrase, Environment.MachineName, ConfigurationKey.SecretsFilePath);
 
-        void MainWindowOnLoaded(object sender, EventArgs e) => MasterPasswordInputBox.Show();
+        async void MainWindowOnLoaded(object sender, EventArgs e) =>
+            await DisableUserInteractionsWhile(async () =>
+            {
+                _passphrase = await MasterPasswordInputBox.GetPasswordAsync();
+
+                _secrets = (await GetRepository(_passphrase.ToClearString()).LoadAsync()).ToList();
+
+                EntryListView.ItemsSource = _secrets;
+            });
+
+        Task DisableUserInteractionsWhile(Func<Task> action) =>
+            DisableUserInteractionsWhile(async () => { await action(); return 0; });
+
+        async Task<T> DisableUserInteractionsWhile<T>(Func<Task<T>> action)
+        {
+            MainContent.IsEnabled = false;
+
+            var result = await action();
+
+            MainContent.IsEnabled = true;
+
+            return result;
+        }
 
         void EntryListViewOnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            var secrets = e.AddedItems.Cast<Secret>().ToArray();
+            var secrets = EntryListView.SelectedItems.Cast<Secret>().ToArray();
 
-            if (secrets.Length != 1)
-                return;
+            IDictionary<string, string> secretFields = null;
+            IDictionary<string, string> secretSecrets = null;
 
-            var secret = secrets.First();
+            if (secrets.Length == 1)
+            {
+                var secret = secrets.First();
 
-            FieldsListView.ItemsSource = secret.Fields;
-            SecretsListView.ItemsSource = secret.Secrets;
+                secretFields = secret.Fields;
+                secretSecrets = secret.Secrets;
+            }
+
+            FieldsListView.ItemsSource = secretFields;
+            SecretsListView.ItemsSource = secretSecrets;
         }
 
         void EntrySearchTextBoxOnTextChanged(object sender, TextChangedEventArgs e)
         {
             if (EntrySearchTextBox.Text.Length < 1)
             {
-                EntryListView.ItemsSource = _readOnlyCollection;
+                EntryListView.ItemsSource = _secrets;
+
                 return;
             }
 
-            var lower = EntrySearchTextBox.Text.ToLower();
+            var searchText = EntrySearchTextBox.Text.ToLowerInvariant();
 
-            var itemsSource = _readOnlyCollection?.Where(secret => secret.Description.ToLower().Contains(lower));
-
-            if (EntryListView != null)
-                EntryListView.ItemsSource = itemsSource;
-        }
-
-        async void AddSecretButtonOnClick(object sender, RoutedEventArgs e)
-        {
-            MainContent.IsEnabled = false;
+            var filteredSecrets = _secrets?.Where(secret => secret.Description.ToLowerInvariant().Contains(searchText));
             
-            var secret = await AddSecretBox.CreateSecretAsync();
-
-            if (secret != null)
-            {
-                _readOnlyCollection = _readOnlyCollection.Concat(new[] { secret }).ToArray();
-
-                await GetRepository(_passphrase.ToClearString()).SaveAsync(_readOnlyCollection);
-
-                EntryListView.ItemsSource = _readOnlyCollection;
-            }
-
-            MainContent.IsEnabled = true;
+            EntryListView.ItemsSource = filteredSecrets;
         }
 
-        void ShowSecretButtonOnClick(object sender, RoutedEventArgs e) => SecretTextBox.Visibility = Visibility.Visible;
+        async void AddSecretButtonOnClick(object sender, RoutedEventArgs e) => 
+            await DisableUserInteractionsWhile(async () =>
+            {
+                var secret = await AddSecretBox.CreateSecretAsync();
+
+                if (secret == null)
+                    return;
+
+                _secrets.Add(secret);
+
+                await GetRepository(_passphrase.ToClearString()).SaveAsync(_secrets);
+
+                EntryListView.Items.Refresh();
+            });
+
+        void ShowSecretButtonOnClick(object sender, RoutedEventArgs e) => ShowSelectedValue();
+
+        void ShowSelectedValue()
+        {
+            SecretTextBox.Text = _selected;
+            SecretTextBox.Visibility = Visibility.Visible;
+            CopySecretButton.IsEnabled = true;
+            ShowSecretButton.IsEnabled = false;
+        }
 
         void CopySecretButtonOnClick(object sender, RoutedEventArgs e)
         {
@@ -85,52 +120,46 @@ namespace Paccia
             Title = $"Copied {selectedItem.Key}";
         }
 
+        string GetActiveSelectedValueAndClearOthers(ListBox active, ListBox inactive)
+        {
+            var activeSelected = active.SelectedItems.Cast<KeyValuePair<string, string>>().ToArray();
+            var inactiveSelected = inactive.SelectedItems.Cast<KeyValuePair<string, string>>().ToArray();
+
+            if (activeSelected.Length != 1 && inactiveSelected.Length != 1)
+            {
+                ShowSecretButton.IsEnabled = false;
+                CopySecretButton.IsEnabled = false;
+                SecretTextBox.Text = null;
+                SecretTextBox.Visibility = Visibility.Hidden;
+
+                return null;
+            }
+
+            if (!activeSelected.Any())
+                return null;
+
+            inactive.SelectedItem = null;
+
+            return activeSelected.Single().Value;
+        }
+
         void FieldsListViewOnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (e.AddedItems.Count < 1)
+            _selected = GetActiveSelectedValueAndClearOthers(FieldsListView, SecretsListView);
+
+            if (_selected == null)
                 return;
 
-            SecretsListView.SelectedItem = null;
-
-            var selectedItem = FieldsListView.SelectedItem as KeyValuePair<string, string>?;
-
-            SecretTextBox.Text = selectedItem?.Value;
-
-            SecretTextBox.Visibility = Visibility.Visible;
+            ShowSelectedValue();
         }
 
         void SecretsListViewOnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (e.AddedItems.Count < 1)
-                return;
-
-            FieldsListView.SelectedItem = null;
-
-            var selectedItem = SecretsListView.SelectedItem as KeyValuePair<string, string>?;
+            _selected = GetActiveSelectedValueAndClearOthers(SecretsListView, FieldsListView);
 
             SecretTextBox.Visibility = Visibility.Hidden;
-
-            SecretTextBox.Text = selectedItem?.Value;
+            ShowSecretButton.IsEnabled = true;
+            CopySecretButton.IsEnabled = true;
         }
-        
-        async Task LoadAndPopulateList(SecureString passphrase)
-        {
-            // Use keylogger prevention.
-            // Maybe: 1-3-5 character of the passphrase first
-            // then 2-4-6...
-            _passphrase = passphrase;
-
-            IsEnabled = false;
-
-            _readOnlyCollection = await GetRepository(_passphrase.ToClearString()).LoadAsync();
-
-            EntryListView.ItemsSource = _readOnlyCollection;
-
-            IsEnabled = true;
-        }
-        
-        async void MasterPasswordInputBoxPasswordInserted(object sender, SecureString e) => await LoadAndPopulateList(e);
-
-        void MasterPasswordInputBoxOnCancel(object sender, EventArgs e) => Close();
     }
 }

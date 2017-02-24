@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using System.Threading;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -8,11 +8,12 @@ namespace Paccia
 {
     public partial class AddSecretBox
     {
+        // Make completely "stateless": ask for name and await, returns then ask for
+        // secret then return and loop until return null etc... WaitAny(save, cancel)...
         readonly Dictionary<string, string> _secrets = new Dictionary<string, string>();
         readonly Dictionary<string, string> _fields = new Dictionary<string, string>();
 
-        readonly AutoResetEvent _resetEvent = new AutoResetEvent(false);
-        bool _save;
+        TaskCompletionSource<bool> _saveOnExit;
 
         public AddSecretBox()
         {
@@ -24,19 +25,19 @@ namespace Paccia
 
         public async Task<Secret> CreateSecretAsync()
         {
-            // Reset values to defaults.
+            ClearForm();
 
             Visibility = Visibility.Visible;
 
             DescriptionTextBox.Focus();
 
-            await _resetEvent.WaitOneAsync();
+            _saveOnExit = new TaskCompletionSource<bool>();
 
-            _resetEvent.Reset();
+            var saveOnExit = await _saveOnExit.Task;
 
             Visibility = Visibility.Collapsed;
-
-            if (!_save)
+            
+            if (!saveOnExit)
                 return null;
 
             var secret = new Secret
@@ -53,16 +54,33 @@ namespace Paccia
             return secret;
         }
 
+        void ClearForm()
+        {
+            DescriptionTextBox.Text =
+                    SecretNameTextBox.Text =
+                            SecretPasswordBox.Password =
+                                    FieldNameTextBox.Text =
+                                            FieldValueTextBox.Text =
+                                                    null;
+
+            _fields.Clear();
+            _secrets.Clear();
+
+            SecretsListView.Items.Refresh();
+            FieldsListView.Items.Refresh();
+        }
+
         void AddSecretButtonOnClick(object sender, RoutedEventArgs e) =>
-            CheckAndAdd(_secrets, SecretNameTextBox, SecretPasswordTextBox.Password);
+            CheckAndAdd(_secrets, SecretNameTextBox, SecretPasswordBox.Password, () => SecretNameTextBox.Text = SecretPasswordBox.Password = null);
 
         void AddFieldButtonOnClick(object sender, RoutedEventArgs e) =>
-            CheckAndAdd(_fields, FieldNameTextBox, FieldValueTextBox.Text);
+            CheckAndAdd(_fields, FieldNameTextBox, FieldValueTextBox.Text, () => FieldNameTextBox.Text = FieldValueTextBox.Text = null);
 
-        void CheckAndAdd(IDictionary<string, string> dictionary, TextBox keyBox, string value)
+        void CheckAndAdd(IDictionary<string, string> dictionary, TextBox keyBox, string value, Action clear)
         {
             if (dictionary.ContainsKey(keyBox.Text))
             {
+                // Replace with "non-popup" (maybe a banner in the window).
                 MessageBox.Show($"{keyBox.Text} gia presente.");
 
                 return;
@@ -70,19 +88,14 @@ namespace Paccia
 
             dictionary.Add(keyBox.Text, value);
 
+            clear();
+
             FieldsListView.Items.Refresh();
             SecretsListView.Items.Refresh();
         }
 
-        void SaveButtonOnClick(object sender, RoutedEventArgs e) => Exit(true);
+        void SaveButtonOnClick(object sender, RoutedEventArgs e) => _saveOnExit.SetResult(true);
 
-        void CancelButtonOnClick(object sender, RoutedEventArgs e) => Exit(false);
-
-        void Exit(bool saveOnExit)
-        {
-            _save = saveOnExit;
-
-            _resetEvent.Set();
-        }
+        void CancelButtonOnClick(object sender, RoutedEventArgs e) => _saveOnExit.SetResult(false);
     }
 }

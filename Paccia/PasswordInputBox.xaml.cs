@@ -1,5 +1,5 @@
-﻿using System;
-using System.Security;
+﻿using System.Security;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 
@@ -7,28 +7,19 @@ namespace Paccia
 {
     public partial class PasswordInputBox
     {
-        public event EventHandler<SecureString> PasswordInserted;
-        public event EventHandler Cancel;
+        TaskCompletionSource<SecureString> _taskCompletionSource;
 
         public PasswordInputBox()
         {
             InitializeComponent();
         }
 
-        void OkButtonOnClick(object sender, RoutedEventArgs e)
-        {
-            Visibility = Visibility.Collapsed;
+        void PasswordInputBoxOnLoaded(object sender, RoutedEventArgs e) => PasswordBox.Focus();
 
-            PasswordInserted?.Invoke(this, PasswordBox.SecurePassword);
-        }
+        void OkButtonOnClick(object sender, RoutedEventArgs e) => _taskCompletionSource.SetResult(PasswordBox.SecurePassword);
 
-        void CancelButtonOnClick(object sender, RoutedEventArgs e)
-        {
-            Visibility = Visibility.Collapsed;
-
-            Cancel?.Invoke(this, EventArgs.Empty);
-        }
-
+        void CancelButtonOnClick(object sender, RoutedEventArgs e) => _taskCompletionSource.SetCanceled();
+        
         void PasswordBoxOnKeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter)
@@ -38,13 +29,23 @@ namespace Paccia
                 CancelButtonOnClick(null, null);
         }
 
-        void PasswordInputBoxOnLoaded(object sender, RoutedEventArgs e) => PasswordBox.Focus();
-
-        public void Show()
+        public async Task<SecureString> GetPasswordAsync()
         {
+            // Use keylogger prevention.
+            // Maybe: 1-3-5 character of the passphrase first
+            // then 2-4-6...
+
+            _taskCompletionSource = new TaskCompletionSource<SecureString>();
+
             Visibility = Visibility.Visible;
-            
-            Focus();
+
+            PasswordBox.Focus();
+
+            var secureString = await _taskCompletionSource.Task;
+
+            Visibility = Visibility.Collapsed;
+
+            return secureString;
         }
     }
 }
