@@ -1,15 +1,19 @@
 ﻿using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 
 namespace Paccia
 {
-    public partial class AddSecretWindow
+    public partial class AddSecretBox
     {
         readonly Dictionary<string, string> _secrets = new Dictionary<string, string>();
         readonly Dictionary<string, string> _fields = new Dictionary<string, string>();
 
-        public AddSecretWindow()
+        readonly AutoResetEvent _resetEvent = new AutoResetEvent(false);
+
+        public AddSecretBox()
         {
             InitializeComponent();
 
@@ -17,9 +21,17 @@ namespace Paccia
             FieldsListView.ItemsSource = _fields;
         }
 
-        public Secret CreateSecret()
+        public async Task<Secret> CreateSecretAsync()
         {
-            ShowDialog();
+            // Reset values to defaults.
+
+            Visibility = Visibility.Visible;
+
+            await _resetEvent.WaitOneAsync();
+
+            _resetEvent.Reset();
+
+            Visibility = Visibility.Collapsed;
 
             var secret = new Secret
             {
@@ -38,7 +50,7 @@ namespace Paccia
         void AddSecretButtonOnClick(object sender, RoutedEventArgs e) =>
             CheckAndAdd(_secrets, SecretNameTextBox, SecretPasswordTextBox);
 
-        void AddFieldButtonOnClick(object sender, RoutedEventArgs e) => 
+        void AddFieldButtonOnClick(object sender, RoutedEventArgs e) =>
             CheckAndAdd(_fields, FieldNameTextBox, FieldValueTextBox);
 
         void CheckAndAdd(IDictionary<string, string> dictionary, TextBox keyBox, TextBox valueBox)
@@ -56,6 +68,6 @@ namespace Paccia
             SecretsListView.Items.Refresh();
         }
 
-        void SaveButtonOnClick(object sender, RoutedEventArgs e) => Close();
+        void SaveButtonOnClick(object sender, RoutedEventArgs e) => _resetEvent.Set();
     }
 }

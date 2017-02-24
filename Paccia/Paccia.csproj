@@ -60,11 +60,12 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="AddSecretWindow.xaml.cs">
-      <DependentUpon>AddSecretWindow.xaml</DependentUpon>
+    <Compile Include="AddSecretBox.xaml.cs">
+      <DependentUpon>AddSecretBox.xaml</DependentUpon>
     </Compile>
     <Compile Include="AesEncryptorDecryptor.cs" />
     <Compile Include="ByteExtensions.cs" />
+    <Compile Include="WaitHandleExtensions.cs" />
     <Compile Include="EncryptedRepositoryFactory.cs" />
     <Compile Include="EncryptionSerializer.cs" />
     <Compile Include="EncryptionSerializersFactory.cs" />
@@ -84,7 +85,7 @@
     <Compile Include="ShaHeaderGenerator.cs" />
     <Compile Include="SingletonConvention.cs" />
     <Compile Include="StringExtensions.cs" />
-    <Page Include="AddSecretWindow.xaml">
+    <Page Include="AddSecretBox.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

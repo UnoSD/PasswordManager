@@ -56,15 +56,17 @@ namespace Paccia
 
         async void AddSecretButtonOnClick(object sender, RoutedEventArgs e)
         {
-            var addSecret = new AddSecretWindow();
-
-            var secret = addSecret.CreateSecret();
+            MainContent.IsEnabled = false;
+            
+            var secret = await AddSecretBox.CreateSecretAsync();
 
             _readOnlyCollection = _readOnlyCollection.Concat(new[] { secret }).ToArray();
 
             await GetRepository(_passphrase.ToClearString()).SaveAsync(_readOnlyCollection);
 
             EntryListView.ItemsSource = _readOnlyCollection;
+
+            MainContent.IsEnabled = true;
         }
 
         void ShowSecretButtonOnClick(object sender, RoutedEventArgs e) => SecretTextBox.Visibility = Visibility.Visible;
