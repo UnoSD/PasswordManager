@@ -65,6 +65,7 @@
                     Width="75"
                     Click="CopySecretButtonOnClick"/>
             <ListView x:Name="SecretsListView"
+                      SelectionMode="Single"
                       HorizontalAlignment="Left"
                       Height="170" 
                       Margin="10,143,0,0" 
@@ -80,6 +81,7 @@
                 </ListView.View>
             </ListView>
             <ListView x:Name="FieldsListView"
+                      SelectionMode="Single"
                       HorizontalAlignment="Left"
                       Height="170" 
                       Margin="239,143,0,0" 

@@ -13,6 +13,7 @@ namespace Paccia
         readonly EncryptedRepositoryFactory<Secret> _repositoryFactory;
         IList<Secret> _secrets;
         SecureString _passphrase;
+        string _selected;
 
         public MainWindow(EncryptedRepositoryFactory<Secret> repositoryFactory)
         {
@@ -50,15 +51,21 @@ namespace Paccia
 
         void EntryListViewOnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            var secrets = e.AddedItems.Cast<Secret>().ToArray();
+            var secrets = EntryListView.SelectedItems.Cast<Secret>().ToArray();
 
-            if (secrets.Length != 1)
-                return;
+            IDictionary<string, string> secretFields = null;
+            IDictionary<string, string> secretSecrets = null;
 
-            var secret = secrets.First();
+            if (secrets.Length == 1)
+            {
+                var secret = secrets.First();
 
-            FieldsListView.ItemsSource = secret.Fields;
-            SecretsListView.ItemsSource = secret.Secrets;
+                secretFields = secret.Fields;
+                secretSecrets = secret.Secrets;
+            }
+
+            FieldsListView.ItemsSource = secretFields;
+            SecretsListView.ItemsSource = secretSecrets;
         }
 
         void EntrySearchTextBoxOnTextChanged(object sender, TextChangedEventArgs e)
@@ -66,15 +73,15 @@ namespace Paccia
             if (EntrySearchTextBox.Text.Length < 1)
             {
                 EntryListView.ItemsSource = _secrets;
+
                 return;
             }
 
-            var lower = EntrySearchTextBox.Text.ToLower();
+            var searchText = EntrySearchTextBox.Text.ToLowerInvariant();
 
-            var itemsSource = _secrets?.Where(secret => secret.Description.ToLower().Contains(lower));
-
-            if (EntryListView != null)
-                EntryListView.ItemsSource = itemsSource;
+            var filteredSecrets = _secrets?.Where(secret => secret.Description.ToLowerInvariant().Contains(searchText));
+            
+            EntryListView.ItemsSource = filteredSecrets;
         }
 
         async void AddSecretButtonOnClick(object sender, RoutedEventArgs e) => 
@@ -92,7 +99,15 @@ namespace Paccia
                 EntryListView.Items.Refresh();
             });
 
-        void ShowSecretButtonOnClick(object sender, RoutedEventArgs e) => SecretTextBox.Visibility = Visibility.Visible;
+        void ShowSecretButtonOnClick(object sender, RoutedEventArgs e) => ShowSelectedValue();
+
+        void ShowSelectedValue()
+        {
+            SecretTextBox.Text = _selected;
+            SecretTextBox.Visibility = Visibility.Visible;
+            CopySecretButton.IsEnabled = true;
+            ShowSecretButton.IsEnabled = false;
+        }
 
         void CopySecretButtonOnClick(object sender, RoutedEventArgs e)
         {
@@ -105,32 +120,46 @@ namespace Paccia
             Title = $"Copied {selectedItem.Key}";
         }
 
+        string GetActiveSelectedValueAndClearOthers(ListBox active, ListBox inactive)
+        {
+            var activeSelected = active.SelectedItems.Cast<KeyValuePair<string, string>>().ToArray();
+            var inactiveSelected = inactive.SelectedItems.Cast<KeyValuePair<string, string>>().ToArray();
+
+            if (activeSelected.Length != 1 && inactiveSelected.Length != 1)
+            {
+                ShowSecretButton.IsEnabled = false;
+                CopySecretButton.IsEnabled = false;
+                SecretTextBox.Text = null;
+                SecretTextBox.Visibility = Visibility.Hidden;
+
+                return null;
+            }
+
+            if (!activeSelected.Any())
+                return null;
+
+            inactive.SelectedItem = null;
+
+            return activeSelected.Single().Value;
+        }
+
         void FieldsListViewOnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (e.AddedItems.Count < 1)
+            _selected = GetActiveSelectedValueAndClearOthers(FieldsListView, SecretsListView);
+
+            if (_selected == null)
                 return;
 
-            SecretsListView.SelectedItem = null;
-
-            var selectedItem = FieldsListView.SelectedItem as KeyValuePair<string, string>?;
-
-            SecretTextBox.Text = selectedItem?.Value;
-
-            SecretTextBox.Visibility = Visibility.Visible;
+            ShowSelectedValue();
         }
 
         void SecretsListViewOnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (e.AddedItems.Count < 1)
-                return;
-
-            FieldsListView.SelectedItem = null;
-
-            var selectedItem = SecretsListView.SelectedItem as KeyValuePair<string, string>?;
+            _selected = GetActiveSelectedValueAndClearOthers(SecretsListView, FieldsListView);
 
             SecretTextBox.Visibility = Visibility.Hidden;
-
-            SecretTextBox.Text = selectedItem?.Value;
+            ShowSecretButton.IsEnabled = true;
+            CopySecretButton.IsEnabled = true;
         }
     }
 }
