@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Security;
 using System.Threading.Tasks;
 
 namespace Paccia
@@ -16,7 +17,7 @@ namespace Paccia
             _headerGenerator = headerGenerator;
         }
 
-        public async Task ToDecryptedStreamAsync(Stream sourceStream, Stream destinationStream, string passphrase, string salt)
+        public async Task ToDecryptedStreamAsync(Stream sourceStream, Stream destinationStream, SecureString passphrase, string salt)
         {
             var headerSalt = _headerGenerator.GetHashedHeader(passphrase, salt);
 

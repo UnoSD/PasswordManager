@@ -1,12 +1,14 @@
+using System.Linq;
+using System.Security;
 using System.Security.Cryptography;
 
 namespace Paccia
 {
     public class ShaHeaderGenerator
     {
-        public byte[] GetHashedHeader(string passphrase, string salt)
+        public byte[] GetHashedHeader(SecureString passphrase, string salt)
         {
-            var saltedPassphrase = (passphrase + salt).ToAsciiBytes();
+            var saltedPassphrase = passphrase.ToBytes().Concat(salt.ToAsciiBytes()).ToArray();
 
             using (var shaCalculator = new SHA512Managed())
                 return shaCalculator.ComputeHash(saltedPassphrase);

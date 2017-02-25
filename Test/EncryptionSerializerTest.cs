@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Security;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Paccia;
@@ -14,7 +15,7 @@ namespace Test
 
             var encryptorDecryptor = new AesEncryptorDecryptor();
             var headerGenerator = new ShaHeaderGenerator();
-            var serializer = new EncryptionSerializer<string>(new BinarySerializer<string>(), new ShaAesEncryptor(encryptorDecryptor, headerGenerator), new ShaAesDecryptor(encryptorDecryptor, headerGenerator), "sample passphrase", "sample salt");
+            var serializer = new EncryptionSerializer<string>(new BinarySerializer<string>(), new ShaAesEncryptor(encryptorDecryptor, headerGenerator), new ShaAesDecryptor(encryptorDecryptor, headerGenerator), "sample passphrase".ToSecureString(), "sample salt");
 
             using (var memoryStream = new MemoryStream())
             {

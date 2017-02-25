@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Security;
 
 namespace Paccia
 {
@@ -16,7 +17,7 @@ namespace Paccia
             _decryptor = decryptor;
         }
 
-        internal EncryptionSerializer<T> GetSerializer(string passphrase, string salt) =>
+        internal EncryptionSerializer<T> GetSerializer(SecureString passphrase, string salt) =>
             _serializers.GetOrAdd
                          (
                               passphrase + salt,

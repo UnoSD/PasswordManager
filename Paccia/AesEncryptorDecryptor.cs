@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Linq;
+using System.Security;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 
@@ -9,11 +11,13 @@ namespace Paccia
     {
         const int KeyIterations = 32768;
 
-        public async Task EncryptDecrtyptStreamAsync(string passphrase, byte[] saltBytes, Stream destinationStream, Stream sourceStream, Func<AesManaged, ICryptoTransform> transform)
+        public async Task EncryptDecrtyptStreamAsync(SecureString passphrase, byte[] saltBytes, Stream destinationStream, Stream sourceStream, Func<AesManaged, ICryptoTransform> transform)
         {
-            var passphraseBytes = passphrase.ToUtf8Bytes();
+            var passphraseBytes = passphrase.ToBytes();
 
-            var key = new Rfc2898DeriveBytes(passphraseBytes, saltBytes, KeyIterations);
+            var strongSaltBytes = saltBytes.Concat("D4D7879B-0F23-4D61-B54E-83EF5DC699BB".ToUtf8Bytes()).ToArray();
+
+            var key = new Rfc2898DeriveBytes(passphraseBytes, strongSaltBytes, KeyIterations);
 
             using (var aes = new AesManaged())
             {

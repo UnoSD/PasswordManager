@@ -29,9 +29,9 @@ namespace Test
         [Test]
         public void EncryptDecrypt()
         {
-            var encrypted = ToEncrypt.EncryptString(Passphrase, Salt);
+            var encrypted = ToEncrypt.EncryptString(Passphrase.ToSecureString(), Salt);
 
-            var decrypted = encrypted.DecryptString(Passphrase, Salt);
+            var decrypted = encrypted.DecryptString(Passphrase.ToSecureString(), Salt);
 
             Assert.That(ToEncrypt, Is.EqualTo(decrypted));
         }
@@ -43,11 +43,11 @@ namespace Test
             using (var encryptedStream = new MemoryStream())
             using (var decryptedStream = new MemoryStream())
             {
-                await _encryptor.ToEncryptedStreamAsync(toEncryptStream, encryptedStream, Passphrase, Salt);
+                await _encryptor.ToEncryptedStreamAsync(toEncryptStream, encryptedStream, Passphrase.ToSecureString(), Salt);
 
                 encryptedStream.Position = 0;
                 
-                await _decryptor.ToDecryptedStreamAsync(encryptedStream, decryptedStream, Passphrase, Salt);
+                await _decryptor.ToDecryptedStreamAsync(encryptedStream, decryptedStream, Passphrase.ToSecureString(), Salt);
                 
                 var result = decryptedStream.ToArray().ToUtf8String();
 
@@ -58,12 +58,12 @@ namespace Test
         [Test]
         public async Task DecryptStream()
         {
-            var encrypted = ToEncrypt.EncryptString(Passphrase, Salt);
+            var encrypted = ToEncrypt.EncryptString(Passphrase.ToSecureString(), Salt);
 
             using (var encryptedStream = new MemoryStream(encrypted.ToArray()))
             using (var decryptedStream = new MemoryStream())
             {
-                await _decryptor.ToDecryptedStreamAsync(encryptedStream, decryptedStream, Passphrase, Salt);
+                await _decryptor.ToDecryptedStreamAsync(encryptedStream, decryptedStream, Passphrase.ToSecureString(), Salt);
                 
                 var decrypted = decryptedStream.ToArray().ToUtf8String();
 
@@ -77,9 +77,9 @@ namespace Test
             using (var toEncryptStream = new MemoryStream(ToEncrypt.ToUtf8Bytes()))
             using (var encryptedStream = new MemoryStream())
             {
-                await _encryptor.ToEncryptedStreamAsync(toEncryptStream, encryptedStream, Passphrase, Salt);
+                await _encryptor.ToEncryptedStreamAsync(toEncryptStream, encryptedStream, Passphrase.ToSecureString(), Salt);
 
-                var decrypted = encryptedStream.ToArray().DecryptString(Passphrase, Salt);
+                var decrypted = encryptedStream.ToArray().DecryptString(Passphrase.ToSecureString(), Salt);
 
                 Assert.That(decrypted, Is.EqualTo(ToEncrypt));
             }

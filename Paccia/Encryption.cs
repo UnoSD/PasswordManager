@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Security;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -8,16 +9,18 @@ namespace Paccia
 {
     public static class EncryptionExtensions
     {
-        public static byte[] EncryptString(this string unencryptedData, string passphrase, string salt)
+        public static byte[] EncryptString(this string unencryptedData, SecureString passphrase, string salt)
         {
             var passphraseAndSaltSha = GetPassphraseAndSaltSha(passphrase, salt);
 
             using (var memoryStream = new MemoryStream())
             {
                 var unencryptedDataBytes = Encoding.UTF8.GetBytes(unencryptedData);
-                var passphraseBytes = Encoding.UTF8.GetBytes(passphrase);
+                var passphraseBytes = passphrase.ToBytes();
 
-                var key = new Rfc2898DeriveBytes(passphraseBytes, passphraseAndSaltSha, 32768);
+                var strongSaltBytes = passphraseAndSaltSha.Concat("D4D7879B-0F23-4D61-B54E-83EF5DC699BB".ToUtf8Bytes()).ToArray();
+
+                var key = new Rfc2898DeriveBytes(passphraseBytes, strongSaltBytes, 32768);
 
                 using (Aes aes = new AesManaged())
                 {
@@ -35,7 +38,7 @@ namespace Paccia
             }
         }
 
-        public static string DecryptString(this byte[] encryptedData, string passphrase, string salt)
+        public static string DecryptString(this byte[] encryptedData, SecureString passphrase, string salt)
         {
             var passphraseAndSaltSha = GetPassphraseAndSaltSha(passphrase, salt);
 
@@ -44,9 +47,11 @@ namespace Paccia
 
             var encryptedDataWithoutLeadingSha = encryptedData.Skip(64).ToArray();
 
-            var passphraseBytes = Encoding.UTF8.GetBytes(passphrase);
+            var passphraseBytes = passphrase.ToBytes();
 
-            var key = new Rfc2898DeriveBytes(passphraseBytes, passphraseAndSaltSha, 32768);
+            var strongSaltBytes = passphraseAndSaltSha.Concat("D4D7879B-0F23-4D61-B54E-83EF5DC699BB".ToUtf8Bytes()).ToArray();
+
+            var key = new Rfc2898DeriveBytes(passphraseBytes, strongSaltBytes, 32768);
 
             using (var aes = new AesManaged())
             {
@@ -66,9 +71,9 @@ namespace Paccia
             }
         }
 
-        static byte[] GetPassphraseAndSaltSha(string passphrase, string salt)
+        static byte[] GetPassphraseAndSaltSha(SecureString passphrase, string salt)
         {
-            var passphraseAndSalt = Encoding.ASCII.GetBytes(passphrase + salt);
+            var passphraseAndSalt = passphrase.ToBytes().Concat(salt.ToAsciiBytes()).ToArray();
 
             using (var shaCalculator = new SHA512Managed())
                 return shaCalculator.ComputeHash(passphraseAndSalt);

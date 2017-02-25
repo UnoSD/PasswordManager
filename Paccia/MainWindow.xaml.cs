@@ -21,7 +21,7 @@ namespace Paccia
             InitializeComponent();
         }
 
-        Repository<Secret> GetRepository(string passphrase) =>
+        Repository<Secret> GetRepository(SecureString passphrase) =>
             _repositoryFactory.GetRepository(passphrase, Environment.MachineName, ConfigurationKey.SecretsFilePath);
 
         async void MainWindowOnLoaded(object sender, EventArgs e) =>
@@ -35,7 +35,7 @@ namespace Paccia
                     return;
                 }
 
-                _secrets = (await GetRepository(_passphrase.ToClearString()).LoadAsync()).ToList();
+                _secrets = (await GetRepository(_passphrase).LoadAsync()).ToList();
 
                 EntryListView.ItemsSource = _secrets;
             });
@@ -110,7 +110,7 @@ namespace Paccia
 
                 _secrets.Add(secret);
 
-                await GetRepository(_passphrase.ToClearString()).SaveAsync(_secrets);
+                await GetRepository(_passphrase).SaveAsync(_secrets);
 
                 EntryListView.Items.Refresh();
             });
@@ -123,7 +123,7 @@ namespace Paccia
                 foreach (var secret in secretsToDelete)
                     _secrets.Remove(secret);
 
-                await GetRepository(_passphrase.ToClearString()).SaveAsync(_secrets);
+                await GetRepository(_passphrase).SaveAsync(_secrets);
 
                 EntryListView.Items.Refresh();
             });
@@ -135,7 +135,7 @@ namespace Paccia
 
                 await AddSecretBox.EditSecretAsync(secret);
                 
-                await GetRepository(_passphrase.ToClearString()).SaveAsync(_secrets);
+                await GetRepository(_passphrase).SaveAsync(_secrets);
 
                 FieldsListView.SelectionChanged -= FieldsListViewOnSelectionChanged;
                 SecretsListView.SelectionChanged -= SecretsListViewOnSelectionChanged;
