@@ -10,17 +10,9 @@ namespace Paccia
 {
     public partial class AddSecretBox
     {
-        // Make completely "stateless": ask for name and await, returns then ask for
-        // secret then return and loop until return null etc... WaitAny(save, cancel)...
-        readonly Dictionary<string, string> _secrets = new Dictionary<string, string>();
-        readonly Dictionary<string, string> _fields = new Dictionary<string, string>();
-
         public AddSecretBox()
         {
             InitializeComponent();
-
-            SecretsListView.ItemsSource = _secrets;
-            FieldsListView.ItemsSource = _fields;
         }
 
         void AddSecretBoxOnLoaded(object sender, RoutedEventArgs routedEventArgs)
@@ -44,20 +36,12 @@ namespace Paccia
         }
 
         public Task<Secret> CreateSecretAsync() =>
-            PopulateShowAndWaitAsync
-            (
-                ClearForm,
-                saveOnExit => UpdateModelIf(saveOnExit, new Secret())
-            );
+            PopulateShowAndWaitAsync(new Secret(), (_, __, ___) => ClearForm(), UpdateModelOnSave);
 
         public Task EditSecretAsync(Secret secret) =>
-            PopulateShowAndWaitAsync
-            (
-                () => PopulateUi(secret),
-                saveOnExit => UpdateModelIf(saveOnExit, secret)
-            );
+            PopulateShowAndWaitAsync(secret, PopulateUi, UpdateModelOnSave);
 
-        Secret UpdateModelIf(bool saveOnExit, Secret secret)
+        Secret UpdateModelOnSave(Secret secret, bool saveOnExit, Dictionary<string, string> fields, Dictionary<string, string> secrets)
         {
             if (!saveOnExit)
                 return null;
@@ -67,31 +51,35 @@ namespace Paccia
             secret.Fields.Clear();
             secret.Secrets.Clear();
 
-            secret.Fields.AddRange(_fields);
-            secret.Secrets.AddRange(_secrets);
+            secret.Fields.AddRange(fields);
+            secret.Secrets.AddRange(secrets);
 
             return secret;
         }
 
-        void PopulateUi(Secret secret)
+        void PopulateUi(Secret secret, Dictionary<string, string> fields, Dictionary<string, string> secrets)
         {
             ClearForm();
 
             DescriptionTextBox.Text = secret.Description;
 
-            foreach (var item in secret.Fields)
-                _fields.Add(item.Key, item.Value);
-
-            foreach (var item in secret.Secrets)
-                _secrets.Add(item.Key, item.Value);
+            fields.AddRange(secret.Fields);
+            secrets.AddRange(secret.Secrets);
 
             FieldsListView.Items.Refresh();
             SecretsListView.Items.Refresh();
         }
 
-        public async Task<T> PopulateShowAndWaitAsync<T>(Action clearAndPopulate, Func<bool, T> onExitAction)
+        delegate void ClearAndPopulate(Secret model, Dictionary<string, string> fieldsStorage, Dictionary<string, string> secretsStorage);
+
+        delegate T UpdateModelFromUiIfSaved<out T>(Secret modelToUpdate, bool saveOnExit, Dictionary<string, string> fieldsStorage, Dictionary<string, string> secretsStorage);
+
+        async Task<T> PopulateShowAndWaitAsync<T>(Secret secret, ClearAndPopulate clearAndPopulate, UpdateModelFromUiIfSaved<T> updateModelFromUiIfSaved)
         {
-            clearAndPopulate();
+            var fields = new Dictionary<string, string>();
+            var secrets = new Dictionary<string, string>();
+
+            clearAndPopulate(secret, fields, secrets);
 
             Visibility = Visibility.Visible;
 
@@ -99,20 +87,48 @@ namespace Paccia
 
             var completionSource = new TaskCompletionSource<bool>();
 
+            FieldsListView.ItemsSource = fields;
+            SecretsListView.ItemsSource = secrets;
+            
+            var saveOnExit = await AddEvemtsAndWaitForUser(secrets, fields, completionSource);
+
+            Visibility = Visibility.Collapsed;
+
+            return updateModelFromUiIfSaved(secret, saveOnExit, fields, secrets);
+        }
+
+        async Task<bool> AddEvemtsAndWaitForUser(IDictionary<string, string> secrets, IDictionary<string, string> fields, TaskCompletionSource<bool> completionSource)
+        {
+            RoutedEventHandler addSecretButtonOnClick = (_, __) => AddSecretAndClear(secrets);
+            RoutedEventHandler addFieldButtonOnClick = (_, __) => AddFieldAndClear(fields);
+            RoutedEventHandler removeSecretButtonOnClick = (_, __) => Remove(secrets, SecretsListView);
+            RoutedEventHandler removeFieldButtonOnClick = (_, __) => Remove(fields, FieldsListView);
+            KeyEventHandler secretPasswordBoxOnKeyDown = (sender, e) => InvokeIfEnterKeyDown(() => AddSecretAndClear(secrets), e);
+            KeyEventHandler fieldValueTextBoxOnKeyDown = (sender, e) => InvokeIfEnterKeyDown(() => AddFieldAndClear(fields), e);
             RoutedEventHandler saveButtonOnClick = (_, __) => completionSource.SetResult(true);
             RoutedEventHandler cancelButtonOnClick = (_, __) => completionSource.SetResult(false);
 
+            AddSecretButton.Click += addSecretButtonOnClick;
+            AddFieldButton.Click += addFieldButtonOnClick;
+            RemoveSecretButton.Click += removeSecretButtonOnClick;
+            RemoveFieldButton.Click += removeFieldButtonOnClick;
+            SecretPasswordBox.KeyDown += secretPasswordBoxOnKeyDown;
+            FieldValueTextBox.KeyDown += fieldValueTextBoxOnKeyDown;
             SaveButton.Click += saveButtonOnClick;
             CancelButton.Click += cancelButtonOnClick;
 
             var saveOnExit = await completionSource.Task;
 
+            AddSecretButton.Click -= addSecretButtonOnClick;
+            AddFieldButton.Click -= addFieldButtonOnClick;
+            RemoveSecretButton.Click -= removeSecretButtonOnClick;
+            RemoveFieldButton.Click -= removeFieldButtonOnClick;
+            SecretPasswordBox.KeyDown -= secretPasswordBoxOnKeyDown;
+            FieldValueTextBox.KeyDown -= fieldValueTextBoxOnKeyDown;
             SaveButton.Click -= saveButtonOnClick;
             CancelButton.Click -= cancelButtonOnClick;
 
-            Visibility = Visibility.Collapsed;
-
-            return onExitAction(saveOnExit);
+            return saveOnExit;
         }
 
         void ClearForm()
@@ -123,24 +139,22 @@ namespace Paccia
             FieldNameTextBox.Text =
             FieldValueTextBox.Text =
                 null;
-
-            _fields.Clear();
-            _secrets.Clear();
-
-            SecretsListView.Items.Refresh();
-            FieldsListView.Items.Refresh();
+            
+            SecretsListView.ItemsSource =
+            FieldsListView.ItemsSource = 
+                null;
         }
 
-        void AddSecretButtonOnClick(object sender, RoutedEventArgs e)
+        void AddSecretAndClear(IDictionary<string, string> secrets)
         {
-            CheckAndAdd(_secrets, SecretNameTextBox, SecretPasswordBox.Password);
+            CheckAndAdd(secrets, SecretNameTextBox, SecretPasswordBox.Password);
 
             SecretNameTextBox.Text = SecretPasswordBox.Password = null;
         }
 
-        void AddFieldButtonOnClick(object sender, RoutedEventArgs e)
+        void AddFieldAndClear(IDictionary<string, string> fields)
         {
-            CheckAndAdd(_fields, FieldNameTextBox, FieldValueTextBox.Text);
+            CheckAndAdd(fields, FieldNameTextBox, FieldValueTextBox.Text);
 
             FieldNameTextBox.Text = FieldValueTextBox.Text = null;
         }
@@ -160,12 +174,6 @@ namespace Paccia
             FieldsListView.Items.Refresh();
             SecretsListView.Items.Refresh();
         }
-
-        void RemoveSecretButtonOnClick(object sender, RoutedEventArgs e) =>
-            Remove(_secrets, SecretsListView);
-
-        void RemoveFieldButtonOnClick(object sender, RoutedEventArgs e) =>
-            Remove(_fields, FieldsListView);
 
         void Remove(IDictionary<string, string> dictionary, ListBox view)
         {
@@ -187,19 +195,13 @@ namespace Paccia
         static void UpdateRemoveButtonStatus(ListBox view, UIElement removeButton) =>
             removeButton.IsEnabled = view.SelectedItems.Count > 0;
 
-        void FieldValueTextBoxOnKeyDown(object sender, KeyEventArgs e) =>
-            InvokeHandlerIfEnterKeyDown(AddFieldButtonOnClick, e);
-
-        void SecretPasswordBoxOnKeyDown(object sender, KeyEventArgs e) =>
-            InvokeHandlerIfEnterKeyDown(AddSecretButtonOnClick, e);
-
         static void ShiftFocusIfEnterKeyDown(IInputElement nextFocus, KeyEventArgs keyEventArgs) =>
-            InvokeHandlerIfEnterKeyDown((_, __) => nextFocus.Focus(), keyEventArgs);
+            InvokeIfEnterKeyDown(() => nextFocus.Focus(), keyEventArgs);
 
-        static void InvokeHandlerIfEnterKeyDown(EventHandler<RoutedEventArgs> eventHandler, KeyEventArgs keyEventArgs)
+        static void InvokeIfEnterKeyDown(Action eventHandler, KeyEventArgs keyEventArgs)
         {
             if (keyEventArgs.Key == Key.Enter)
-                eventHandler(null, null);
+                eventHandler();
         }
     }
 }
