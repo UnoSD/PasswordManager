@@ -63,8 +63,14 @@ namespace Paccia
                 secretSecrets = secret.Secrets;
             }
 
+            FieldsListView.SelectionChanged -= FieldsListViewOnSelectionChanged;
             FieldsListView.ItemsSource = secretFields;
+            FieldsListView.SelectionChanged += FieldsListViewOnSelectionChanged;
+            SecretsListView.SelectionChanged -= SecretsListViewOnSelectionChanged;
             SecretsListView.ItemsSource = secretSecrets;
+            SecretsListView.SelectionChanged += SecretsListViewOnSelectionChanged;
+
+            SetState(State.NothingSelected);
         }
 
         void EntrySearchTextBoxOnTextChanged(object sender, TextChangedEventArgs e)
@@ -106,7 +112,7 @@ namespace Paccia
 
             var selectedItem = (KeyValuePair<string, string>)item;
 
-            Clipboard.SetText(SecretTextBox.Text);
+            Clipboard.SetDataObject(SecretTextBox.Text);
 
             Title = $"Copied {selectedItem.Key}";
         }
