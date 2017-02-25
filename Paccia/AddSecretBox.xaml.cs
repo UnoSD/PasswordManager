@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -23,9 +24,67 @@ namespace Paccia
             FieldsListView.ItemsSource = _fields;
         }
 
-        public async Task<Secret> CreateSecretAsync()
+        public async Task<Secret> CreateSecretAsync() => await ClearPrepareShowAndWaitAsync(() =>
+            {
+                
+            },
+            saveOnExit =>
+            {
+                if (!saveOnExit)
+                    return null;
+
+                var secret = new Secret
+                {
+                    Description = DescriptionTextBox.Text
+                };
+
+                foreach (var item in _fields)
+                    secret.Fields.Add(item);
+
+                foreach (var item in _secrets)
+                    secret.Secrets.Add(item);
+
+                return secret;
+            });
+
+        public Task EditSecretAsync(Secret secret) => ClearPrepareShowAndWaitAsync(() =>
+            {
+                DescriptionTextBox.Text = secret.Description;
+
+                foreach (var item in secret.Fields)
+                    _fields.Add(item.Key, item.Value);
+
+                foreach (var item in secret.Secrets)
+                    _secrets.Add(item.Key, item.Value);
+
+                FieldsListView.Items.Refresh();
+                SecretsListView.Items.Refresh();
+            },
+            saveOnExit =>
+            {
+                if (!saveOnExit)
+                    return false;
+
+                secret.Description = DescriptionTextBox.Text;
+
+                secret.Fields.Clear();
+
+                foreach (var item in _fields)
+                    secret.Fields.Add(item);
+
+                secret.Secrets.Clear();
+
+                foreach (var item in _secrets)
+                    secret.Secrets.Add(item);
+
+                return true;
+            });
+
+        public async Task<T> ClearPrepareShowAndWaitAsync<T>(Action prepare, Func<bool, T> after)
         {
             ClearForm();
+
+            prepare();
 
             Visibility = Visibility.Visible;
 
@@ -36,22 +95,8 @@ namespace Paccia
             var saveOnExit = await _saveOnExit.Task;
 
             Visibility = Visibility.Collapsed;
-            
-            if (!saveOnExit)
-                return null;
 
-            var secret = new Secret
-            {
-                Description = DescriptionTextBox.Text
-            };
-
-            foreach (var item in _fields)
-                secret.Fields.Add(item);
-
-            foreach (var item in _secrets)
-                secret.Secrets.Add(item);
-
-            return secret;
+            return after(saveOnExit);
         }
 
         void ClearForm()
@@ -76,6 +121,12 @@ namespace Paccia
         void AddFieldButtonOnClick(object sender, RoutedEventArgs e) =>
             CheckAndAdd(_fields, FieldNameTextBox, FieldValueTextBox.Text, () => FieldNameTextBox.Text = FieldValueTextBox.Text = null);
 
+        void RemoveSecretButtonOnClick(object sender, RoutedEventArgs e) => 
+            Remove(_secrets, SecretsListView);
+
+        void RemoveFieldButtonOnClick(object sender, RoutedEventArgs e) =>
+            Remove(_fields, FieldsListView);
+
         void CheckAndAdd(IDictionary<string, string> dictionary, TextBox keyBox, string value, Action clear)
         {
             if (dictionary.ContainsKey(keyBox.Text))
@@ -94,8 +145,28 @@ namespace Paccia
             SecretsListView.Items.Refresh();
         }
 
+        void Remove(IDictionary<string, string> dictionary, ListBox view)
+        {
+            var pairs = view.SelectedItems.Cast<KeyValuePair<string, string>>().ToArray();
+
+            foreach (var pair in pairs)
+                dictionary.Remove(pair);
+
+            FieldsListView.Items.Refresh();
+            SecretsListView.Items.Refresh();
+        }
+
         void SaveButtonOnClick(object sender, RoutedEventArgs e) => _saveOnExit.SetResult(true);
 
         void CancelButtonOnClick(object sender, RoutedEventArgs e) => _saveOnExit.SetResult(false);
+
+        void SecretsListViewOnSelectionChanged(object sender, SelectionChangedEventArgs e) => 
+            UpdateRemoveButtonStatus(SecretsListView, RemoveSecretButton);
+
+        void FieldsListViewOnSelectionChanged(object sender, SelectionChangedEventArgs e) =>
+            UpdateRemoveButtonStatus(FieldsListView, RemoveFieldButton);
+
+        static void UpdateRemoveButtonStatus(ListBox view, UIElement removeButton) => 
+            removeButton.IsEnabled = view.SelectedItems.Count > 0;
     }
 }

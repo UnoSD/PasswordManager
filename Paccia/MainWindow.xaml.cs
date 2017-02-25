@@ -63,7 +63,9 @@ namespace Paccia
             IDictionary<string, string> secretFields = null;
             IDictionary<string, string> secretSecrets = null;
 
-            if (secrets.Length == 1)
+            var singleSecretSelected = secrets.Length == 1;
+
+            if (singleSecretSelected)
             {
                 var secret = secrets.First();
 
@@ -79,6 +81,7 @@ namespace Paccia
             SecretsListView.SelectionChanged += SecretsListViewOnSelectionChanged;
 
             DeleteSecretButton.IsEnabled = secrets.Any();
+            EditSecretButton.IsEnabled = singleSecretSelected;
 
             SetState(State.NothingSelected);
         }
@@ -125,6 +128,28 @@ namespace Paccia
                 await GetRepository(_passphrase.ToClearString()).SaveAsync(_secrets);
 
                 EntryListView.Items.Refresh();
+            });
+
+        async void EditSecretButtonOnClick(object sender, RoutedEventArgs e) =>
+            await DisableUserInteractionsWhile(async () =>
+            {
+                var secret = EntryListView.SelectedItems.Cast<Secret>().Single();
+
+                await AddSecretBox.EditSecretAsync(secret);
+                
+                await GetRepository(_passphrase.ToClearString()).SaveAsync(_secrets);
+
+                FieldsListView.SelectionChanged -= FieldsListViewOnSelectionChanged;
+                SecretsListView.SelectionChanged -= SecretsListViewOnSelectionChanged;
+                EntryListView.Items.Refresh();
+                FieldsListView.Items.Refresh();
+                SecretsListView.Items.Refresh();
+                FieldsListView.SelectedItem = null;
+                SecretsListView.SelectedItem = null;
+                FieldsListView.SelectionChanged += FieldsListViewOnSelectionChanged;
+                SecretsListView.SelectionChanged += SecretsListViewOnSelectionChanged;
+
+                SetState(State.NothingSelected);
             });
 
         void ShowSecretButtonOnClick(object sender, RoutedEventArgs e) => SetState(State.SecretSelectedShown);

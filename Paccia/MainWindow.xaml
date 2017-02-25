@@ -48,13 +48,15 @@
                     Height="23" 
                     IsEnabled="False"
                     Click="DeleteSecretButtonOnClick"/>
-            <Button Content="Edit" 
+            <Button x:Name="EditSecretButton"
+                    Content="Edit" 
                     HorizontalAlignment="Left" 
                     Margin="462,178,0,0"
                     VerticalAlignment="Top" 
                     Width="75" 
                     Height="23" 
-                    IsEnabled="False"/>
+                    IsEnabled="False"
+                    Click="EditSecretButtonOnClick"/>
             <Button x:Name="AddSecretButton"
                     Content="Add new"
                     HorizontalAlignment="Left"
