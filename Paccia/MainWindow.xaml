@@ -59,7 +59,7 @@
                     Height="23" />
             <TextBox x:Name="SecretTextBox"
                      HorizontalAlignment="Left"
-                     Margin="10,381,0,0"
+                     Margin="10,385,0,0"
                      VerticalAlignment="Top"
                      Width="367"
                      Visibility="Hidden"
