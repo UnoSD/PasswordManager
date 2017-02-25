@@ -29,6 +29,12 @@ namespace Paccia
             {
                 _passphrase = await MasterPasswordInputBox.GetPasswordAsync();
 
+                if (_passphrase == null)
+                {
+                    Close();
+                    return;
+                }
+
                 _secrets = (await GetRepository(_passphrase.ToClearString()).LoadAsync()).ToList();
 
                 EntryListView.ItemsSource = _secrets;

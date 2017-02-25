@@ -18,7 +18,7 @@ namespace Paccia
 
         void OkButtonOnClick(object sender, RoutedEventArgs e) => _taskCompletionSource.SetResult(PasswordBox.SecurePassword);
 
-        void CancelButtonOnClick(object sender, RoutedEventArgs e) => _taskCompletionSource.SetCanceled();
+        void CancelButtonOnClick(object sender, RoutedEventArgs e) => _taskCompletionSource.SetResult(null);
         
         void PasswordBoxOnKeyDown(object sender, KeyEventArgs e)
         {
