@@ -9,7 +9,7 @@ namespace Paccia
         readonly Logger _logger;
         readonly Lazy<Task<string>> _storageFilePath;
 
-        public UserFileStorageProvider(IConfiguration configuration, ConfigurationKey filePathConfigurationKey, Logger logger)
+        internal UserFileStorageProvider(IConfiguration configuration, ConfigurationKey filePathConfigurationKey, Logger logger)
         {
             _logger = logger;
             _storageFilePath = new Lazy<Task<string>>(() => configuration.GetAsync(filePathConfigurationKey));

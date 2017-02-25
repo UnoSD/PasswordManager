@@ -24,7 +24,7 @@ namespace Paccia
         {
             var serializer = _encryptionSerializersFactory.GetSerializer(passphrase, salt);
 
-            return new Repository<T>(serializer, new UserFileStorageProvider(_configuration, filePathConfigurationKey, _logger));
+            return new Repository<T>(serializer, new UserIsolatedStreamStorageProvider(_configuration, filePathConfigurationKey, _logger));
         }
     }
 }

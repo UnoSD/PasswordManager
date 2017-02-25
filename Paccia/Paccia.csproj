@@ -29,7 +29,7 @@
     <InstallUrl>https://unosd.blob.core.windows.net/clickonce/</InstallUrl>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
-    <ApplicationRevision>2</ApplicationRevision>
+    <ApplicationRevision>4</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -98,6 +98,7 @@
     <Compile Include="ByteExtensions.cs" />
     <Compile Include="IStreamStorageProvider.cs" />
     <Compile Include="UserFileStorageProvider.cs" />
+    <Compile Include="UserIsolatedStreamStorageProvider.cs" />
     <Compile Include="WaitHandleExtensions.cs" />
     <Compile Include="EncryptedRepositoryFactory.cs" />
     <Compile Include="EncryptionSerializer.cs" />
