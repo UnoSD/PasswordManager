@@ -98,6 +98,7 @@
     <Compile Include="ByteExtensions.cs" />
     <Compile Include="IStreamStorageProvider.cs" />
     <Compile Include="UserFileStorageProvider.cs" />
+    <Compile Include="UserIsolatedStreamStorageProvider.cs" />
     <Compile Include="WaitHandleExtensions.cs" />
     <Compile Include="EncryptedRepositoryFactory.cs" />
     <Compile Include="EncryptionSerializer.cs" />
