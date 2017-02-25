@@ -38,8 +38,6 @@ namespace Paccia
                 _secrets = (await GetRepository(_passphrase.ToClearString()).LoadAsync()).ToList();
 
                 EntryListView.ItemsSource = _secrets;
-
-                MasterPasswordInputBox.Focus();
             });
 
         Task DisableUserInteractionsWhile(Func<Task> action) =>

@@ -1,7 +1,9 @@
-﻿using System.Security;
+﻿using System;
+using System.Security;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Threading;
 
 namespace Paccia
 {
@@ -13,11 +15,11 @@ namespace Paccia
         {
             InitializeComponent();
         }
-        
+
         void OkButtonOnClick(object sender, RoutedEventArgs e) => _taskCompletionSource.SetResult(PasswordBox.SecurePassword);
 
         void CancelButtonOnClick(object sender, RoutedEventArgs e) => _taskCompletionSource.SetResult(null);
-        
+
         void PasswordBoxOnKeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter)
@@ -37,20 +39,21 @@ namespace Paccia
 
             Visibility = Visibility.Visible;
 
-            PasswordBox.Focus();
+            await Dispatcher.BeginInvoke
+                (
+                    DispatcherPriority.Input,
+                    (Action)(() =>
+                    {
+                        PasswordBox.Focus();
+                        Keyboard.Focus(PasswordBox);
+                    })
+                );
 
             var secureString = await _taskCompletionSource.Task;
 
             Visibility = Visibility.Collapsed;
 
             return secureString;
-        }
-
-        protected override void OnGotFocus(RoutedEventArgs e)
-        {
-            PasswordBox.Focus();
-
-            base.OnGotFocus(e);
         }
     }
 }
