@@ -38,6 +38,8 @@ namespace Paccia
                 _secrets = (await GetRepository(_passphrase.ToClearString()).LoadAsync()).ToList();
 
                 EntryListView.ItemsSource = _secrets;
+
+                MasterPasswordInputBox.Focus();
             });
 
         Task DisableUserInteractionsWhile(Func<Task> action) =>
@@ -76,6 +78,8 @@ namespace Paccia
             SecretsListView.ItemsSource = secretSecrets;
             SecretsListView.SelectionChanged += SecretsListViewOnSelectionChanged;
 
+            DeleteSecretButton.IsEnabled = secrets.Any();
+
             SetState(State.NothingSelected);
         }
 
@@ -110,6 +114,19 @@ namespace Paccia
                 EntryListView.Items.Refresh();
             });
 
+        async void DeleteSecretButtonOnClick(object sender, RoutedEventArgs e) =>
+            await DisableUserInteractionsWhile(async () =>
+            {
+                var secretsToDelete = EntryListView.SelectedItems.Cast<Secret>().ToArray();
+
+                foreach (var secret in secretsToDelete)
+                    _secrets.Remove(secret);
+
+                await GetRepository(_passphrase.ToClearString()).SaveAsync(_secrets);
+
+                EntryListView.Items.Refresh();
+            });
+
         void ShowSecretButtonOnClick(object sender, RoutedEventArgs e) => SetState(State.SecretSelectedShown);
 
         void CopySecretButtonOnClick(object sender, RoutedEventArgs e)
@@ -122,7 +139,7 @@ namespace Paccia
 
             Title = $"Copied {selectedItem.Key}";
         }
-        
+
         void FieldsListViewOnSelectionChanged(object sender, SelectionChangedEventArgs e) => SetState(State.FieldSelected);
 
         void SecretsListViewOnSelectionChanged(object sender, SelectionChangedEventArgs e) => SetState(State.SecretSelected);
@@ -137,7 +154,7 @@ namespace Paccia
 
         static string GetSelectedItemValue(ListBox view) => 
             view.SelectedItems.Cast<KeyValuePair<string, string>>().Single().Value;
-        
+
         void SetState(State newState)
         {
             switch (newState)

@@ -13,9 +13,7 @@ namespace Paccia
         {
             InitializeComponent();
         }
-
-        void PasswordInputBoxOnLoaded(object sender, RoutedEventArgs e) => PasswordBox.Focus();
-
+        
         void OkButtonOnClick(object sender, RoutedEventArgs e) => _taskCompletionSource.SetResult(PasswordBox.SecurePassword);
 
         void CancelButtonOnClick(object sender, RoutedEventArgs e) => _taskCompletionSource.SetResult(null);
@@ -46,6 +44,13 @@ namespace Paccia
             Visibility = Visibility.Collapsed;
 
             return secureString;
+        }
+
+        protected override void OnGotFocus(RoutedEventArgs e)
+        {
+            PasswordBox.Focus();
+
+            base.OnGotFocus(e);
         }
     }
 }
