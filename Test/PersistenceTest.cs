@@ -22,7 +22,7 @@ namespace Test
 
             var serializer = new BinarySerializer<IEnumerable<Secret>>();
 
-            var repository = new Repository<Secret>(configuration, serializer, ConfigurationKey.SecretsFilePath);
+            var repository = new Repository<Secret>(serializer, new UserFileStorageProvider(configuration, ConfigurationKey.SecretsFilePath, Substitute.For<Logger>()));
 
             await repository.SaveAsync(new[]
             {
