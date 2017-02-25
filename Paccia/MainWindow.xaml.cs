@@ -98,7 +98,7 @@ namespace Paccia
                 EntryListView.Items.Refresh();
             });
 
-        void ShowSecretButtonOnClick(object sender, RoutedEventArgs e) => SetShownState();
+        void ShowSecretButtonOnClick(object sender, RoutedEventArgs e) => SetState(State.SecretSelectedShown);
 
         void CopySecretButtonOnClick(object sender, RoutedEventArgs e)
         {
@@ -123,26 +123,12 @@ namespace Paccia
             SecretSelectedShown
         }
 
-        void SetShownState() => SetState(true, 0);
-
-        void SetState(State last) => SetState(false, last);
-
-        void SetState(bool shown, State last)
+        static string GetSelectedItemValue(ListBox view) => 
+            view.SelectedItems.Cast<KeyValuePair<string, string>>().Single().Value;
+        
+        void SetState(State newState)
         {
-            var selectedFields = FieldsListView.SelectedItems.Cast<KeyValuePair<string, string>>().ToArray();
-            var selectedSecrets = SecretsListView.SelectedItems.Cast<KeyValuePair<string, string>>().ToArray();
-
-            var currentState = selectedSecrets.Any() && selectedFields.Any() ?
-                               last :
-                               selectedFields.Any() ?
-                                   State.FieldSelected :
-                                   selectedSecrets.Any() ?
-                                   shown ?
-                                       State.SecretSelectedShown :
-                                       State.SecretSelected :
-                                   State.NothingSelected;
-
-            switch (currentState)
+            switch (newState)
             {
                 case State.NothingSelected:
                     SecretTextBox.Text = null;
@@ -151,21 +137,25 @@ namespace Paccia
                     CopySecretButton.IsEnabled = false;
                     break;
                 case State.FieldSelected:
+                    SecretsListView.SelectionChanged -= SecretsListViewOnSelectionChanged;
                     SecretsListView.SelectedItem = null;
-                    SecretTextBox.Text = selectedFields.Single().Value;
+                    SecretsListView.SelectionChanged += SecretsListViewOnSelectionChanged;
+                    SecretTextBox.Text = GetSelectedItemValue(FieldsListView);
                     SecretTextBox.Visibility = Visibility.Visible;
                     ShowSecretButton.IsEnabled = false;
                     CopySecretButton.IsEnabled = true;
                     break;
                 case State.SecretSelected:
+                    FieldsListView.SelectionChanged -= FieldsListViewOnSelectionChanged;
                     FieldsListView.SelectedItem = null;
+                    FieldsListView.SelectionChanged += FieldsListViewOnSelectionChanged;
                     SecretTextBox.Text = null;
                     SecretTextBox.Visibility = Visibility.Hidden;
                     ShowSecretButton.IsEnabled = true;
                     CopySecretButton.IsEnabled = true;
                     break;
                 case State.SecretSelectedShown:
-                    SecretTextBox.Text = selectedSecrets.Single().Value;
+                    SecretTextBox.Text = GetSelectedItemValue(SecretsListView);
                     SecretTextBox.Visibility = Visibility.Visible;
                     ShowSecretButton.IsEnabled = false;
                     CopySecretButton.IsEnabled = true;
