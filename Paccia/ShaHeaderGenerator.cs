@@ -8,7 +8,7 @@ namespace Paccia
     {
         public byte[] GetHashedHeader(SecureString passphrase, string salt)
         {
-            var saltedPassphrase = passphrase.ToBytes().Concat(salt.ToAsciiBytes()).ToArray();
+            var saltedPassphrase = passphrase.ToUnicodeBytes().Concat(salt.ToAsciiBytes()).ToArray();
 
             using (var shaCalculator = new SHA512Managed())
                 return shaCalculator.ComputeHash(saltedPassphrase);

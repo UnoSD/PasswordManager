@@ -6,6 +6,7 @@ namespace Paccia
     {
         public static byte[] ToUtf8Bytes(this string value) => value.ToBytes(Encoding.UTF8);
         public static byte[] ToAsciiBytes(this string value) => value.ToBytes(Encoding.ASCII);
+        public static byte[] ToUnicodeBytes(this string value) => value.ToBytes(Encoding.Unicode);
         public static byte[] ToBytes(this string value, Encoding encoding) => encoding.GetBytes(value);
     }
 }

@@ -13,7 +13,7 @@ namespace Paccia
 
         public async Task EncryptDecrtyptStreamAsync(SecureString passphrase, byte[] saltBytes, Stream destinationStream, Stream sourceStream, Func<AesManaged, ICryptoTransform> transform)
         {
-            var passphraseBytes = passphrase.ToBytes();
+            var passphraseBytes = passphrase.ToUnicodeBytes();
 
             var strongSaltBytes = saltBytes.Concat("D4D7879B-0F23-4D61-B54E-83EF5DC699BB".ToUtf8Bytes()).ToArray();
 

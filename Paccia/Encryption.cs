@@ -16,7 +16,7 @@ namespace Paccia
             using (var memoryStream = new MemoryStream())
             {
                 var unencryptedDataBytes = Encoding.UTF8.GetBytes(unencryptedData);
-                var passphraseBytes = passphrase.ToBytes();
+                var passphraseBytes = passphrase.ToUnicodeBytes();
 
                 var strongSaltBytes = passphraseAndSaltSha.Concat("D4D7879B-0F23-4D61-B54E-83EF5DC699BB".ToUtf8Bytes()).ToArray();
 
@@ -47,7 +47,7 @@ namespace Paccia
 
             var encryptedDataWithoutLeadingSha = encryptedData.Skip(64).ToArray();
 
-            var passphraseBytes = passphrase.ToBytes();
+            var passphraseBytes = passphrase.ToUnicodeBytes();
 
             var strongSaltBytes = passphraseAndSaltSha.Concat("D4D7879B-0F23-4D61-B54E-83EF5DC699BB".ToUtf8Bytes()).ToArray();
 
@@ -73,7 +73,7 @@ namespace Paccia
 
         static byte[] GetPassphraseAndSaltSha(SecureString passphrase, string salt)
         {
-            var passphraseAndSalt = passphrase.ToBytes().Concat(salt.ToAsciiBytes()).ToArray();
+            var passphraseAndSalt = passphrase.ToUnicodeBytes().Concat(salt.ToAsciiBytes()).ToArray();
 
             using (var shaCalculator = new SHA512Managed())
                 return shaCalculator.ComputeHash(passphraseAndSalt);
