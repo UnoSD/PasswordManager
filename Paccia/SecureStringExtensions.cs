@@ -1,21 +1,14 @@
 using System;
-using System.Runtime.ConstrainedExecution;
+using System.Collections.Generic;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Security;
-using System.Text;
+using System.Security.Cryptography;
 
 namespace Paccia
 {
     public static class SecureStringExtensions
     {
-#if MONO
-        [System.Runtime.Versioning.ResourceExposure(System.Runtime.Versioning.ResourceScope.None)]
-#else
-        [DllImport("oleaut32.dll")]
-#endif
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-        internal static extern uint SysStringLen(IntPtr bstr);
-
         public static string ToClearString(this SecureString value)
         {
             var bstr = Marshal.SecureStringToBSTR(value);
@@ -26,35 +19,52 @@ namespace Paccia
             }
             finally
             {
-                Marshal.FreeBSTR(bstr);
+                Marshal.ZeroFreeBSTR(bstr);
             }
         }
 
-        public static string ToClearStringManual(this SecureString value) => 
-            Encoding.Unicode.GetString(value.ToBytes());
-
-        public static byte[] ToBytes(this SecureString value)
+        public static byte[] ToUnicodeBytes(this SecureString value)
         {
             var bstr = Marshal.SecureStringToBSTR(value);
 
-            var len = SysStringLen(bstr);
-
-            var bytes = new byte[len * 2];
-
-            for (var i = 0; i < len * 2; i++)
-                bytes[i] = Marshal.ReadByte(bstr, i);
-            
             try
             {
-                return bytes;
+                var length = Marshal.ReadInt32(bstr, -4);
+
+                var bytes = new byte[length];
+
+                // Let's pin it to prevent the GC from moving it in memory before we wipe it out.
+                // TODO: I presume it's useless if we then free it later without clearing the content.
+                // TODO: See the solution below.
+                var bytesPin = GCHandle.Alloc(bytes, GCHandleType.Pinned);
+
+                try
+                {
+                    Marshal.Copy(bstr, bytes, 0, length);
+
+                    return bytes;
+                }
+                finally
+                {
+                    // TODO: The caller should zero the array then free the GC.
+                    // TODO: Make it an IDisposable/high order function so the user can use
+                    // TODO: it then we handle the clean up.
+                    //for (var i = 0; i < bytes.Length; i++)
+                    //    bytes[i] = 0;
+
+                    bytesPin.Free();
+                }
+
             }
             finally
             {
-                Marshal.FreeBSTR(bstr);
+                // I presume Marshal.FreeBSTR(bstr) would just free the memory without wiping, check.
+                Marshal.ZeroFreeBSTR(bstr);
             }
         }
 
-        public static SecureString ToSecureString(this string value)
+        // TODO: Move to test project, should not be used outside testing.
+        internal static SecureString ToSecureString(this string value)
         {
             var secureString = new SecureString();
 
@@ -62,6 +72,38 @@ namespace Paccia
                 secureString.AppendChar(character);
 
             return secureString;
+        }
+
+        public static string ToUnicodeSha512Base64(this SecureString value) =>
+            value.ToLazyUnicodeBytes().ToStream(b => new[] { b }).ToSha512Base64();
+
+        public static string ToSha512Base64(this byte[] value)
+        {
+            using (var memoryStream = new MemoryStream(value))
+                return memoryStream.ToSha512Base64();
+        }
+
+        public static string ToSha512Base64(this Stream stream)
+        {
+            using (var shaCalculator = new SHA512Managed())
+                return Convert.ToBase64String(shaCalculator.ComputeHash(stream));
+        }
+
+        public static IEnumerable<byte> ToLazyUnicodeBytes(this SecureString value)
+        {
+            var bstr = Marshal.SecureStringToBSTR(value);
+
+            try
+            {
+                var length = Marshal.ReadInt32(bstr, -4);
+
+                for (var index = 0; index < length; index++)
+                    yield return Marshal.ReadByte(bstr, index);
+            }
+            finally
+            {
+                Marshal.ZeroFreeBSTR(bstr);
+            }
         }
     }
 }

@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Paccia
 {
-    public static class EnumerableExtensions
+    static class EnumerableExtensions
     {
-        public static IEnumerable<T> GetEnumerableMembers<T>() => Enum.GetValues(typeof(T)).Cast<T>();
+        internal static EnumerableStream<T> ToStream<T>(this IEnumerable<T> source, Func<T, byte[]> map) =>
+            new EnumerableStream<T>(source, map);
     }
 }

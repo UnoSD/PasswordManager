@@ -55,6 +55,7 @@
     <Otherwise />
   </Choose>
   <ItemGroup>
+    <Compile Include="EncryptionEncodingHashingTest.cs" />
     <Compile Include="ConfigurationTest.cs" />
     <Compile Include="EncryptionSerializerTest.cs" />
     <Compile Include="EncryptionTest.cs" />

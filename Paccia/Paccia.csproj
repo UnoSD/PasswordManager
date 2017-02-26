@@ -29,7 +29,7 @@
     <InstallUrl>https://unosd.blob.core.windows.net/clickonce/</InstallUrl>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
-    <ApplicationRevision>7</ApplicationRevision>
+    <ApplicationRevision>8</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -96,6 +96,8 @@
     </Compile>
     <Compile Include="AesEncryptorDecryptor.cs" />
     <Compile Include="ByteExtensions.cs" />
+    <Compile Include="EnumerableExtensions.cs" />
+    <Compile Include="EnumerableStream.cs" />
     <Compile Include="IStreamStorageProvider.cs" />
     <Compile Include="UserFileStorageProvider.cs" />
     <Compile Include="UserIsolatedStreamStorageProvider.cs" />
@@ -135,7 +137,7 @@
     <Compile Include="Configuration.cs" />
     <Compile Include="ConfigurationKey.cs" />
     <Compile Include="DictionaryExtensions.cs" />
-    <Compile Include="EnumerableExtensions.cs" />
+    <Compile Include="EnumExtensions.cs" />
     <Compile Include="HardcodedConfigurationDefaults.cs" />
     <Compile Include="IConfiguration.cs" />
     <Compile Include="IConfigurationDefaults.cs" />
