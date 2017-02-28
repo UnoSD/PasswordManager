@@ -67,9 +67,6 @@
     <SignManifests>true</SignManifests>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Core">
-      <HintPath>..\Core\bin\Debug\netstandard1.6\Core.dll</HintPath>
-    </Reference>
     <Reference Include="StructureMap, Version=4.4.3.564, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\StructureMap.4.4.3\lib\net45\StructureMap.dll</HintPath>
       <Private>True</Private>
