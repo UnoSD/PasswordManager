@@ -1,0 +1,19 @@
+{
+  "manifest_version": 2,
+  "name": "Paccia",
+  "version": "1.0",
+
+  "content_scripts": [
+    {
+      "matches": [ "*://*/*" ],
+      "js": [ "extension.js" ]
+    }
+  ],
+
+  "applications": {
+    "gecko": {
+      "id": "unosd.dev@gmail.com",
+      "strict_min_version": "42.0"
+    }
+  }
+}

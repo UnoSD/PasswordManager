@@ -1,0 +1,9 @@
+{
+  "name": "web-extension",
+  "version": "0.0.0",
+  "description": "WebExtension",
+  "main": "app.js",
+  "author": {
+    "name": "stefano.dantonio"
+  }
+}
