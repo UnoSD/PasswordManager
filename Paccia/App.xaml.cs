@@ -35,7 +35,7 @@ namespace Paccia
         static void SetupContainer(ConfigurationExpression configuration)
         {
             configuration.Scan(ScannerConfiguration);
-            configuration.For(typeof(ISerializer<>)).Singleton().Use(typeof(BinarySerializer<>));
+            configuration.For(typeof(ISerializer<>)).Singleton().Use(typeof(JsonSerializer<>));
         }
 
         static void ScannerConfiguration(IAssemblyScanner scanner)

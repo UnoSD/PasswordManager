@@ -19,6 +19,7 @@ using System.Runtime.InteropServices;
 [assembly: Guid("d525f1f0-e395-4b33-957c-c3d8338aee1b")]
 
 [assembly: InternalsVisibleTo("Test")]
+[assembly: InternalsVisibleTo("Paccia")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 [assembly: InternalsVisibleTo("StructureMap.AutoMocking")]
 [assembly: InternalsVisibleTo("StructureMap")]
