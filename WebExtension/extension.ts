@@ -1,3 +1,7 @@
+// User feedback for debug.
+document.body.style.border = "5px solid red";
+console.log("Loading Paccia web extension.");
+
 const cryptoJs = require("crypto-js");
 const http = require("http");
 
