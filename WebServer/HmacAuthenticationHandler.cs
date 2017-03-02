@@ -26,11 +26,12 @@ namespace WebServer
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
         {
             var authorization = Request.Headers["authorization"].ToString();
-
+            
             if (authorization.IsNullOrEmpty())
                 return AuthenticateResult.Skip();
 
-            var valid = await HmacRequestValidator.ValidateAsync(Request, authorization, Options, _memoryCache, _secretKeyBytes).ConfigureAwait(false);
+            var valid = await HmacRequestValidator.ValidateAsync(Request, authorization, Options, _memoryCache, _secretKeyBytes)
+                                                  .ConfigureAwait(false);
 
             return valid ?
                    AuthenticateResult.Success(_ticket.Value) :

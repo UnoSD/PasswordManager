@@ -14,6 +14,7 @@ namespace WebServer
         public HmacAuthenticationOptions()
         {
             AuthenticationScheme = "Hmac";
+            AutomaticChallenge = true;
         }
     }
 }

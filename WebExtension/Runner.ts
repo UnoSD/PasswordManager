@@ -1,8 +1,7 @@
-﻿import Extension = require("./extension");
+﻿const extension = require("./extension");
 
 export class Runner {
     run() {
-        // TODO: Mock the browser environment.
-        Extension.start();
+        extension.constructor();
     }
 }
