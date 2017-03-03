@@ -6,7 +6,7 @@
   "content_scripts": [
     {
       "matches": [ "*://*/*" ],
-      "js": [ "extension.js" ]
+      "js": [ "browserified.js" ]
     }
   ],
 

@@ -33,6 +33,8 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="README.md" />
+    <Content Include="tsconfig.json" />
     <TypeScriptCompile Include="app.ts" />
     <Content Include="manifest.json" />
     <Content Include="package.json" />

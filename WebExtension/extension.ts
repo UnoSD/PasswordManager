@@ -1,5 +1,5 @@
 // User feedback for debug.
-document.body.style.border = "5px solid red";
+if(typeof document !== "undefined") document.body.style.border = "5px solid red";
 console.log("Loading Paccia web extension.");
 
 const cryptoJs = require("crypto-js");
@@ -25,10 +25,13 @@ const options = {
     port: port,
     path: path,
     method: httpMethod,
+    withCredentials: false,
     headers: {
         'Authorization': `Hmac ${appId}:${signature}:${nonce}:${time}`
     }
 };
+
+console.log("Sending the request.");
 
 http.request(options, res => {
     console.log(`Status code: ${res.statusCode}`);
@@ -38,3 +41,5 @@ http.request(options, res => {
 
     res.on("data", chunk => { console.log(`Body       : ${chunk}`); });
 }).end();
+
+console.log("Request sent.");
