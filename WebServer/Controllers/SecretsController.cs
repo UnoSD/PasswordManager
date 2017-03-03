@@ -20,7 +20,8 @@ namespace WebServer.Controllers
 
             var secrets = await CreateTestRepository().LoadAsync();
 
-            return secrets.Where(secret => secret.Description == sourceUri.Host);
+            return secrets.Where(secret => secret.Description == sourceUri.Host)
+                          .Concat(new [] { new Secret { Description = "Test" } });
         }
 
         [HttpPost]
