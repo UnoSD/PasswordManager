@@ -12,6 +12,7 @@
         "Scripts/cryptojs/enc-base64.js",
         "Scripts/cryptojs/hmac.js",
         "Scripts/cryptojs/sha256.js",
+        "Scripts/mousetrap/mousetrap.js",
         "app.js"
       ]
     }

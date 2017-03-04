@@ -23,6 +23,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="app.css" />
+    <Content Include="favicon.ico" />
     <Content Include="index.html" />
     <Content Include="Scripts\cryptojs\core.js" />
     <Content Include="Scripts\cryptojs\enc-base64.js" />
@@ -34,12 +35,14 @@
     <TypeScriptCompile Include="app.ts" />
     <TypeScriptCompile Include="Scripts\typings\cryptojs\cryptojs.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\jquery\jquery.d.ts" />
+    <TypeScriptCompile Include="Scripts\typings\mousetrap\mousetrap.d.ts" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="manifest.json" />
     <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Scripts\mousetrap\mousetrap.js" />
     <Content Include="web.config" />
   </ItemGroup>
   <ItemGroup>
@@ -50,6 +53,7 @@
       <DependentUpon>web.config</DependentUpon>
     </None>
   </ItemGroup>
+  <ItemGroup />
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">12.0</VisualStudioVersion>
   </PropertyGroup>
