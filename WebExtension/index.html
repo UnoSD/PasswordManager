@@ -1,0 +1,30 @@
+﻿<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Test</title>
+    <link rel="stylesheet" href="app.css" type="text/css" />
+
+    <script src="Scripts/jquery/jquery.js"></script>
+    <script src="Scripts/cryptojs/core.js"></script>
+    <script src="Scripts/cryptojs/enc-base64.js"></script>
+    <script src="Scripts/cryptojs/hmac.js"></script>
+    <script src="Scripts/cryptojs/sha256.js"></script>
+
+    <script>
+        function run() {
+            var toReload = "app.js";
+            $('script[src="' + toReload + '"]').remove();
+            $('<script>').attr('src', toReload).appendTo('head');
+        }
+    </script>
+
+</head>
+<body>
+    <h1>Test</h1>
+    <div id="content">
+        <button onclick="run()">Run</button>
+    </div>
+</body>
+</html>

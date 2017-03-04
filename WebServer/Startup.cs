@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,10 +11,19 @@ namespace WebServer
 {
     public class Startup
     {
+        const string CorsPolicyName = "Cors";
+
         public void ConfigureServices(IServiceCollection services) =>
-            services.AddAuthentication()
+            services.AddCors(options => options.AddPolicy(CorsPolicyName, AllowCorsSettings))
+                    .AddAuthentication()
                     .AddMemoryCache()
                     .AddMvc();
+
+        static void AllowCorsSettings(CorsPolicyBuilder builder) =>
+            builder.AllowAnyOrigin()
+                   .AllowAnyHeader()
+                   .AllowAnyMethod()
+                   .AllowCredentials();
 
         public void Configure(IApplicationBuilder builder, IHostingEnvironment environment, ILoggerFactory loggerFactory)
         {
@@ -30,7 +40,8 @@ namespace WebServer
                 AutomaticAuthenticate = true
             };
 
-            builder.UseMiddleware<HmacAuthenticationMiddleware>(Options.Create(authenticationOptions))
+            builder.UseCors(CorsPolicyName)
+                   .UseMiddleware<HmacAuthenticationMiddleware>(Options.Create(authenticationOptions))
                    .UseMvc();
         }
 

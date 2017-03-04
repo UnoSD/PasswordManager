@@ -6,7 +6,14 @@
   "content_scripts": [
     {
       "matches": [ "*://*/*" ],
-      "js": [ "browserified.js" ]
+      "js": [
+        "Scripts/jquery/jquery.js",
+        "Scripts/cryptojs/core.js",
+        "Scripts/cryptojs/enc-base64.js",
+        "Scripts/cryptojs/hmac.js",
+        "Scripts/cryptojs/sha256.js",
+        "app.js"
+      ]
     }
   ],
 
