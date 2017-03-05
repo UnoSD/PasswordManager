@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Paccia;
+using WebServer.Controllers;
 
 namespace WebServer
 {
@@ -17,7 +18,7 @@ namespace WebServer
             services.AddCors(options => options.AddPolicy(CorsPolicyName, AllowCorsSettings))
                     .AddAuthentication()
                     .AddMemoryCache()
-                    .AddMvc();
+                    .AddMvc(s => s.ModelBinderProviders.Insert(0, ModelBinderProvider.From(new SecretModelBinder())));
 
         static void AllowCorsSettings(CorsPolicyBuilder builder) =>
             builder.AllowAnyOrigin()

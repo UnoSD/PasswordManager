@@ -28,6 +28,7 @@
     <Content Include="Scripts\cryptojs\core.js" />
     <Content Include="Scripts\cryptojs\enc-base64.js" />
     <Content Include="Scripts\cryptojs\hmac.js" />
+    <Content Include="Scripts\cryptojs\md5.js" />
     <Content Include="Scripts\cryptojs\sha256.js" />
     <Content Include="Scripts\jquery\jquery.js" />
   </ItemGroup>

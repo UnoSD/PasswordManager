@@ -35,7 +35,7 @@ namespace WebServer.Controllers
         }
 
         [HttpPost]
-        public async Task PostAsync(Secret secret)
+        public async Task PostAsync([ModelBinder(BinderType = typeof(SecretModelBinder))]Secret secret)
         {
             var repository = CreateTestRepository();
 

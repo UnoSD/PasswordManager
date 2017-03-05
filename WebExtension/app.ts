@@ -50,7 +50,7 @@ async function getSecret(baseUrl: string) {
         const secretKey = "CB6C5713-E213-4524-B93C-17020F0B5B4B";
         const httpMethod = "GET";
         const nonce = Math.random().toString(36).substring(2, 15);
-        const content = "";
+        const content = CryptoJS.enc.Base64.stringify(CryptoJS.MD5(""));
         const time = Date.now() / 1000 | 0;
 
         const dataToHash = `${appId}${httpMethod}${path}${time}${nonce}${content}`;

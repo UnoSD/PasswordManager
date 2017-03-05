@@ -11,6 +11,8 @@ namespace Paccia
 
             await stream.CopyToAsync(memoryStream);
 
+            memoryStream.Position = 0;
+
             return memoryStream;
         }
     }

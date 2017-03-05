@@ -9,6 +9,8 @@ namespace WebServer
 {
     class HmacRequestValidator
     {
+        static readonly Lazy<string> EmptyStringMd5 = new Lazy<string>(() => string.Empty.ToUtf8Bytes().ToBase64Md5Hash());
+
         public static Task<bool> ValidateAsync(HttpRequest request, string authorization, HmacAuthenticationOptions options, IMemoryCache memoryCache, Lazy<byte[]> secretKeyBytes)
         {
             var authenticationHeader = AuthenticationHeaderValue.Parse(authorization);
@@ -49,10 +51,14 @@ namespace WebServer
 
         static async Task<string> GetRequestBodyMd5(HttpRequest request)
         {
-            using (var bodyStream = await request.Body.ToMemoryStreamAsync().ConfigureAwait(false))
-                return bodyStream.Length == 0 ?
-                           string.Empty :
-                           bodyStream.ToArray().ToBase64Md5Hash();
+            var memoryStream = await request.Body.ToMemoryStreamAsync().ConfigureAwait(false);
+
+            request.Body = memoryStream;
+
+            return memoryStream.Length == 0 ?
+                   EmptyStringMd5.Value :
+                   memoryStream.ToArray()
+                               .ToBase64Md5Hash();
         }
     }
 }
