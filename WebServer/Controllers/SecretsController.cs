@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -14,14 +13,25 @@ namespace WebServer.Controllers
     public partial class SecretsController : Controller
     {
         [HttpGet("{url}")]
-        public async Task<IEnumerable<Secret>> GetAsync(string url)
+        public async Task<JsonResult> GetAsync(string url)
         {
             var sourceUri = new Uri(WebUtility.UrlDecode(url));
 
             var secrets = await CreateTestRepository().LoadAsync();
 
-            return secrets.Where(secret => secret.Description == sourceUri.Host)
-                          .Concat(new [] { new Secret { Description = "Test" } });
+            // At some point will return the whole secret (or selected fields/secrets
+            // and we will map which field/password goes to which page control.
+
+            // Introduce property for Secret instead of First(): MainSecretKey.
+            var secret = secrets.FirstOrDefault(s => s.Url == sourceUri.Host)
+                               ?.Secrets
+                                .FirstOrDefault();
+
+            return new JsonResult(new
+            {
+                username = secret?.Key ?? $"ServerUserFor {sourceUri}",
+                password = secret?.Value ?? "ServerPassword"
+            });
         }
 
         [HttpPost]
@@ -30,8 +40,8 @@ namespace WebServer.Controllers
             var repository = CreateTestRepository();
 
             var secrets = await repository.LoadAsync();
-            
-            await repository.SaveAsync(secrets.Concat(new [] { secret }));
+
+            await repository.SaveAsync(secrets.Concat(new[] { secret }));
         }
     }
 }
