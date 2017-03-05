@@ -1,8 +1,13 @@
 var trap = getGlobalKeyboardShortcuts();
+var username: string;
 
 trap.bind("ctrl+shift+u", (e) => setElementValueFromAsync(async () => {
     return (await getBaseUrlSecretAsync()).username;
 }, e.target));
+
+trap.bind("ctrl+shift+y", (e) => username = getTextValue(e.target));
+
+trap.bind("ctrl+shift+s", (e) => addBaseUrlSecretAsync(e.target));
 
 trap.bind("ctrl+shift+p", (e) => setElementValueFromAsync(async () => {
     return (await getBaseUrlSecretAsync()).password;
@@ -16,6 +21,15 @@ function getGlobalKeyboardShortcuts() {
     return trap;
 }
 
+function getTextValue(element: any) {
+    if (!($(element).is("input") || $(element).is("textarea"))) {
+        alert("You must be in the password box to insert the password.");
+        return "";
+    }
+
+    return element.value;
+}
+
 async function setElementValueFromAsync(getValue: () => Promise<string>, element: any) {
     if (!($(element).is("input") || $(element).is("textarea"))) {
         alert("You must be in the password box to insert the password.");
@@ -25,8 +39,21 @@ async function setElementValueFromAsync(getValue: () => Promise<string>, element
     element.value = await getValue();
 }
 
-async function getBaseUrlSecretAsync() {
-    const baseUrl = `${window.location.protocol}//${window.location.hostname}`;
+async function addBaseUrlSecretAsync(target) {
+    const password = getTextValue(target);
 
-    return await SecretRepository.getSecret(baseUrl);
+    await SecretRepository.addSecret({
+        username: username,
+        password: password
+    }, getBaseUrl());
+
+    alert("Secret added.");
+};
+
+async function getBaseUrlSecretAsync() {
+    return await SecretRepository.getSecret(getBaseUrl());
+}
+
+function getBaseUrl() {
+    return `${window.location.protocol}//${window.location.hostname}`;
 }

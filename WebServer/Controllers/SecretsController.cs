@@ -34,12 +34,16 @@ namespace WebServer.Controllers
             });
         }
 
-        [HttpPost]
-        public async Task PostAsync([ModelBinder(BinderType = typeof(SecretModelBinder))]Secret secret)
+        [HttpPost("{url}")]
+        public async Task PostAsync([ModelBinder(BinderType = typeof(SecretModelBinder))]Secret secret, string url)
         {
             var repository = CreateTestRepository();
 
             var secrets = await repository.LoadAsync();
+
+            var sourceUri = new Uri(WebUtility.UrlDecode(url));
+
+            secret.Url = sourceUri.Host;
 
             await repository.SaveAsync(secrets.Concat(new[] { secret }));
         }
