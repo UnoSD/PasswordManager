@@ -33,10 +33,13 @@
     <Content Include="Scripts\jquery\jquery.js" />
   </ItemGroup>
   <ItemGroup>
+    <TypeScriptCompile Include="AjaxAsync.ts" />
     <TypeScriptCompile Include="app.ts" />
+    <TypeScriptCompile Include="ISecret.ts" />
     <TypeScriptCompile Include="Scripts\typings\cryptojs\cryptojs.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\jquery\jquery.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\mousetrap\mousetrap.d.ts" />
+    <TypeScriptCompile Include="SecretRepository.ts" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="manifest.json" />
