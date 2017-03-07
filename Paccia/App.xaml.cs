@@ -36,6 +36,7 @@ namespace Paccia
         {
             configuration.Scan(ScannerConfiguration);
             configuration.For(typeof(ISerializer<>)).Singleton().Use(typeof(JsonSerializer<>));
+            configuration.For<IConfigurationDefaults>().Singleton().Use<PacciaHardcodedConfigurationDefaults>();
         }
 
         static void ScannerConfiguration(IAssemblyScanner scanner)
