@@ -24,7 +24,7 @@ namespace Paccia
 
             logger.Log(container.WhatDoIHave());
             logger.Log(container.WhatDidIScan());
-
+            
             var mainWindow = container.GetInstance<MainWindow>();
 
             MainWindow = mainWindow;
@@ -41,6 +41,7 @@ namespace Paccia
         static void ScannerConfiguration(IAssemblyScanner scanner)
         {
             scanner.TheCallingAssembly();
+            scanner.AssemblyContainingType(typeof(Secret));
             scanner.SingleImplementationsOfInterface();
             scanner.WithDefaultConventions();
             // Using OnAddedPluginType doesn't make concrete types singletons by default.

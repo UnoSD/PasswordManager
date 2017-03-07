@@ -20,7 +20,7 @@ namespace Test
 
             configuration.GetAsync(ConfigurationKey.SecretsFilePath).Returns(filePath);
 
-            var serializer = new BinarySerializer<IEnumerable<Secret>>();
+            var serializer = new JsonSerializer<IEnumerable<Secret>>();
 
             var repository = new Repository<Secret>(serializer, new UserFileStorageProvider(configuration, ConfigurationKey.SecretsFilePath, Substitute.For<Logger>()));
 
