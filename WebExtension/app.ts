@@ -9,7 +9,10 @@ trap.bind("alt+p", (e) => setElementValueFromAsync(async () => {
     return (await getBaseUrlSecretAsync()).password;
 }, e.target));
 
-trap.bind("ctrl+shift+u", (e) => username = getTextValue(e.target));
+trap.bind("ctrl+shift+u", (e) => {
+    username = getTextValue(e.target);
+    notify("Username copied.");
+});
 
 trap.bind("ctrl+alt+s", (e) => addBaseUrlSecretAsync(e.target));
 
@@ -59,6 +62,12 @@ function getBaseUrl() {
 }
 
 function notify(message: string) {
-    //https://nickersoft.github.io/push.js/
-    alert(message);
+    Push.create("Password manager", {
+        body: message,
+        timeout: 4000,
+        onClick: function () {
+            window.focus();
+            this.close();
+        }
+    });
 }

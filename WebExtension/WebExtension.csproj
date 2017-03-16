@@ -39,6 +39,7 @@
     <TypeScriptCompile Include="Scripts\typings\cryptojs\cryptojs.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\jquery\jquery.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\mousetrap\mousetrap.d.ts" />
+    <TypeScriptCompile Include="Scripts\typings\push.js\push.d.ts" />
     <TypeScriptCompile Include="SecretRepository.ts" />
   </ItemGroup>
   <ItemGroup>
@@ -47,6 +48,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Scripts\mousetrap\mousetrap.js" />
+    <Content Include="Scripts\push.js\push.js" />
     <Content Include="web.config" />
   </ItemGroup>
   <ItemGroup>
