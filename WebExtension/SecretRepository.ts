@@ -16,8 +16,7 @@
 
     static async addSecret(secret: ISecret, baseUrl: string) {
         try {
-            // Change to PUT and amend existing instead of adding.
-            const method = "POST";
+            const method = "PUT";
             const path = `/secrets/${encodeURIComponent(baseUrl)}`;
             const object = {
                 Secrets: {}

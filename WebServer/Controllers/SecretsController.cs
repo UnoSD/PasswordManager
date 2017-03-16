@@ -34,8 +34,8 @@ namespace WebServer.Controllers
             });
         }
 
-        [HttpPost("{url}")]
-        public async Task PostAsync([ModelBinder(BinderType = typeof(SecretModelBinder))]Secret secret, string url)
+        [HttpPut("{url}")]
+        public async Task PutAsync([ModelBinder(BinderType = typeof(SecretModelBinder))]Secret secret, string url)
         {
             var repository = CreateTestRepository();
 
@@ -44,6 +44,11 @@ namespace WebServer.Controllers
             var sourceUri = new Uri(WebUtility.UrlDecode(url));
 
             secret.Url = sourceUri.Host;
+
+            var existing = secrets.Where(s => s.Url == sourceUri.Host).ToArray();
+
+            if (existing.Any())
+                secrets = secrets.Except(existing).ToArray();
 
             await repository.SaveAsync(secrets.Concat(new[] { secret }));
         }

@@ -1,17 +1,17 @@
 var trap = getGlobalKeyboardShortcuts();
 var username: string;
 
-trap.bind("ctrl+shift+u", (e) => setElementValueFromAsync(async () => {
+trap.bind("alt+u", (e) => setElementValueFromAsync(async () => {
     return (await getBaseUrlSecretAsync()).username;
 }, e.target));
 
-trap.bind("ctrl+shift+y", (e) => username = getTextValue(e.target));
-
-trap.bind("ctrl+shift+s", (e) => addBaseUrlSecretAsync(e.target));
-
-trap.bind("ctrl+shift+p", (e) => setElementValueFromAsync(async () => {
+trap.bind("alt+p", (e) => setElementValueFromAsync(async () => {
     return (await getBaseUrlSecretAsync()).password;
 }, e.target));
+
+trap.bind("ctrl+shift+u", (e) => username = getTextValue(e.target));
+
+trap.bind("ctrl+alt+s", (e) => addBaseUrlSecretAsync(e.target));
 
 function getGlobalKeyboardShortcuts() {
     const trap = new Mousetrap(window.frameElement);
@@ -23,7 +23,7 @@ function getGlobalKeyboardShortcuts() {
 
 function getTextValue(element: any) {
     if (!($(element).is("input") || $(element).is("textarea"))) {
-        alert("You must be in the password box to insert the password.");
+        notify("You must be in the password box to insert the password.");
         return "";
     }
 
@@ -32,7 +32,7 @@ function getTextValue(element: any) {
 
 async function setElementValueFromAsync(getValue: () => Promise<string>, element: any) {
     if (!($(element).is("input") || $(element).is("textarea"))) {
-        alert("You must be in the password box to insert the password.");
+        notify("You must be in the password box to insert the password.");
         return;
     }
 
@@ -47,7 +47,7 @@ async function addBaseUrlSecretAsync(target) {
         password: password
     }, getBaseUrl());
 
-    alert("Secret added.");
+    notify("Secret added.");
 };
 
 async function getBaseUrlSecretAsync() {
@@ -56,4 +56,9 @@ async function getBaseUrlSecretAsync() {
 
 function getBaseUrl() {
     return `${window.location.protocol}//${window.location.hostname}`;
+}
+
+function notify(message: string) {
+    //https://nickersoft.github.io/push.js/
+    alert(message);
 }
