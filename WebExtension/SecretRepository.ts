@@ -2,41 +2,27 @@
     private static emptyContentMd5 = CryptoJS.enc.Base64.stringify(CryptoJS.MD5(""));
 
     static async getSecret(baseUrl: string) {
-        try {
-            const method = "GET";
-            const path = `/secrets/${encodeURIComponent(baseUrl)}`;
-
-            return await SecretRepository.sendRequestWithoutContent(method, path) as ISecret;
-        } catch (e) {
-            console.error(e);
-        }
-
-        return { username: "Error", password: "" };
+        const method = "GET";
+        const path = `/secrets/${encodeURIComponent(baseUrl)}`;
+        
+        return await SecretRepository.sendRequest(method, path, "") as ISecret;
     }
 
     static async addSecret(secret: ISecret, baseUrl: string) {
-        try {
-            const method = "PUT";
-            const path = `/secrets/${encodeURIComponent(baseUrl)}`;
-            const object = {
-                Secrets: {}
-            };
+        const method = "PUT";
+        const path = `/secrets/${encodeURIComponent(baseUrl)}`;
+        const object = {
+            Secrets: {}
+        };
 
-            object.Secrets[secret.username] = secret.password;
+        object.Secrets[secret.username] = secret.password;
 
-            const content = JSON.stringify(object);
+        const content = JSON.stringify(object);
 
-            // Encrypt content as well.
-            await SecretRepository.sendRequest(method, path, content);
-        } catch (e) {
-            console.error(e);
-        }
+        // Encrypt content as well.
+        await SecretRepository.sendRequest(method, path, content);
     }
-
-    private static async sendRequestWithoutContent(method: string, path: string) {
-        return await SecretRepository.sendRequest(method, path, "");
-    }
-
+    
     private static async sendRequest(method: string, path: string, content: string) {
         try {
             let contentMd5: string;

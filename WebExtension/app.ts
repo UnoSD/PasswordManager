@@ -54,7 +54,12 @@ async function addBaseUrlSecretAsync(target) {
 };
 
 async function getBaseUrlSecretAsync() {
-    return await SecretRepository.getSecret(getBaseUrl());
+    const secret = await SecretRepository.getSecret(getBaseUrl());
+
+    if(secret == null)
+        notify("Unable to retrieve secret.");
+
+    return secret;
 }
 
 function getBaseUrl() {
