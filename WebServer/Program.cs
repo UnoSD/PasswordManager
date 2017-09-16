@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Net;
 using Microsoft.AspNetCore.Hosting;
 
 namespace WebServer
@@ -6,12 +7,13 @@ namespace WebServer
     public class Program
     {
         public static void Main(string[] args) =>
-            new WebHostBuilder().UseKestrel()
-                                .UseContentRoot(Directory.GetCurrentDirectory())
-                                .UseStartup<Startup>()
-                                .UseKestrel(k => k.UseHttps(@"Certificate.pfx", "paccia"))
-                                .UseUrls("https://localhost:5000")
-                                .Build()
-                                .Run();
+            new WebHostBuilder()
+                .UseKestrel(k => 
+                    k.Listen(IPAddress.Loopback, 5000, o => 
+                        o.UseHttps("Certificate.pfx", "paccia")))
+                .UseContentRoot(Directory.GetCurrentDirectory())
+                .UseStartup<Startup>()
+                .Build()
+                .Run();
     }
 }

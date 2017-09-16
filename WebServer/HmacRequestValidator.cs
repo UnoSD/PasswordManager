@@ -15,7 +15,7 @@ namespace WebServer
         {
             var authenticationHeader = AuthenticationHeaderValue.Parse(authorization);
 
-            if (!options.AuthenticationScheme.EqualsInsensitiveCase(authenticationHeader.Scheme))
+            if (!authenticationHeader.Scheme.EqualsInsensitiveCase(HmacAuthenticationHandler.SchemeName))
                 return Task.FromResult(false);
 
             var parameters = authenticationHeader.Parameter.Split(':');

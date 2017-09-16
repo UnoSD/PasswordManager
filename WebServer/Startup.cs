@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Paccia;
+using System;
 using WebServer.Controllers;
 
 namespace WebServer
@@ -14,11 +14,24 @@ namespace WebServer
     {
         const string CorsPolicyName = "Cors";
 
-        public void ConfigureServices(IServiceCollection services) =>
-            services.AddCors(options => options.AddPolicy(CorsPolicyName, AllowCorsSettings))
-                    .AddAuthentication()
+        public void ConfigureServices(IServiceCollection services)
+        {
+            void SetupOptions(HmacAuthenticationOptions options)
+            {
+                options.MaxRequestAge = TimeSpan.FromSeconds(300);
+                options.AppId = "92C9C40B-BB2F-4813-8FA8-39628AD7EA4E";
+                options.SecretKey = "CB6C5713-E213-4524-B93C-17020F0B5B4B".ToBase64();
+            }
+
+            var schemeName = HmacAuthenticationHandler.SchemeName;
+
+            services.AddScheme<HmacAuthenticationOptions, HmacAuthenticationHandler>(schemeName, SetupOptions)
+                    .AddCors(options => options.AddPolicy(CorsPolicyName, AllowCorsSettings))
                     .AddMemoryCache()
-                    .AddMvc(s => s.ModelBinderProviders.Insert(0, ModelBinderProvider.From(new SecretModelBinder())));
+                    .AddAuthentication(schemeName);
+
+            services.AddMvc(s => s.ModelBinderProviders.Insert(0, ModelBinderProvider.From(new SecretModelBinder())));
+        }
 
         static void AllowCorsSettings(CorsPolicyBuilder builder) =>
             builder.AllowAnyOrigin()
@@ -33,16 +46,8 @@ namespace WebServer
             loggerFactory.AddConsole(configuration.GetSection("Logging"))
                          .AddDebug();
 
-            var authenticationOptions = new HmacAuthenticationOptions
-            {
-                // TODO: Generate will all Base64 characters, not only Guid characters.
-                SecretKey = "CB6C5713-E213-4524-B93C-17020F0B5B4B".ToBase64(),
-                AppId = "92C9C40B-BB2F-4813-8FA8-39628AD7EA4E",
-                AutomaticAuthenticate = true
-            };
-
             builder.UseCors(CorsPolicyName)
-                   .UseMiddleware<HmacAuthenticationMiddleware>(Options.Create(authenticationOptions))
+                   .UseAuthentication()
                    .UseMvc();
         }
 

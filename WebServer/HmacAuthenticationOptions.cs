@@ -1,20 +1,12 @@
 using System;
-using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Authentication;
 
 namespace WebServer
 {
-    public class HmacAuthenticationOptions : AuthenticationOptions
+    public class HmacAuthenticationOptions : AuthenticationSchemeOptions
     {
-        public TimeSpan MaxRequestAge { get; set; } = TimeSpan.FromSeconds(300);
-
+        public TimeSpan MaxRequestAge { get; set; }
         public string AppId { get; set; }
-
         public string SecretKey { get; set; }
-
-        public HmacAuthenticationOptions()
-        {
-            AuthenticationScheme = "Hmac";
-            AutomaticChallenge = true;
-        }
     }
 }
