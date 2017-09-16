@@ -9,6 +9,8 @@ namespace WebServer
             new WebHostBuilder().UseKestrel()
                                 .UseContentRoot(Directory.GetCurrentDirectory())
                                 .UseStartup<Startup>()
+                                .UseKestrel(k => k.UseHttps(@"Certificate.pfx", "paccia"))
+                                .UseUrls("https://localhost:5000")
                                 .Build()
                                 .Run();
     }

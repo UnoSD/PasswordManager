@@ -45,7 +45,7 @@
     }
 
     private static getFullUrl(path: string) {
-        const protocol = "http";
+        const protocol = "https";
         const host = "localhost";
         const port = 5000;
 
