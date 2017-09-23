@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Paccia;
 using System;
 using WebServer.Controllers;
+using System.Collections.Generic;
 
 namespace WebServer
 {
@@ -25,7 +26,21 @@ namespace WebServer
 
             var schemeName = HmacAuthenticationHandler.SchemeName;
 
-            services.AddScheme<HmacAuthenticationOptions, HmacAuthenticationHandler>(schemeName, SetupOptions)
+            services.AddSingleton<AesEncryptorDecryptor>()
+                    .AddSingleton<ShaHeaderGenerator>()
+                    .AddSingleton<ISerializer<IEnumerable<Secret>>, JsonSerializer<IEnumerable<Secret>>>()
+                    .AddSingleton<IEncryptor, ShaAesEncryptor>()
+                    .AddSingleton<IDecryptor, ShaAesDecryptor>()
+                    .AddSingleton<IConfigurationDefaults, WebServerHardcodedConfigurationDefaults>()
+                    .AddSingleton<Paccia.IConfiguration, Configuration>()
+                    .AddSingleton<Logger>()
+                    .AddSingleton<EncryptionSerializersFactory<IEnumerable<Secret>>>()
+                    .AddSingleton<EncryptedRepositoryFactory<Secret>>()
+                    .AddSingleton(provider => provider.GetService<EncryptedRepositoryFactory<Secret>>()
+                                                      .GetRepository("password".ToSecureString(), 
+                                                                     Environment.MachineName, 
+                                                                     ConfigurationKey.SecretsFilePath))
+                    .AddScheme<HmacAuthenticationOptions, HmacAuthenticationHandler>(schemeName, SetupOptions)
                     .AddCors(options => options.AddPolicy(CorsPolicyName, AllowCorsSettings))
                     .AddMemoryCache()
                     .AddAuthentication(schemeName);

@@ -10,14 +10,18 @@ namespace WebServer.Controllers
 {
     [Authorize]
     [Route("[controller]")]
-    public partial class SecretsController : Controller
+    public class SecretsController : Controller
     {
+        readonly Repository<Secret> _repository;
+
+        public SecretsController(Repository<Secret> repository) => _repository = repository;
+
         [HttpGet("{url}")]
         public async Task<JsonResult> GetAsync(string url)
         {
             var sourceUri = new Uri(WebUtility.UrlDecode(url));
 
-            var secrets = await CreateTestRepository().LoadAsync();
+            var secrets = await _repository.LoadAsync();
 
             // At some point will return the whole secret (or selected fields/secrets
             // and we will map which field/password goes to which page control.
@@ -29,17 +33,15 @@ namespace WebServer.Controllers
 
             return new JsonResult(new
             {
-                username = secret?.Key ?? $"ServerUserFor {sourceUri}",
-                password = secret?.Value ?? "ServerPassword"
+                username = secret?.Key ?? $"Not found",
+                password = secret?.Value ?? "NF"
             });
         }
 
         [HttpPut("{url}")]
         public async Task PutAsync([ModelBinder(BinderType = typeof(SecretModelBinder))]Secret secret, string url)
         {
-            var repository = CreateTestRepository();
-
-            var secrets = await repository.LoadAsync();
+            var secrets = await _repository.LoadAsync();
 
             var sourceUri = new Uri(WebUtility.UrlDecode(url));
 
@@ -50,7 +52,7 @@ namespace WebServer.Controllers
             if (existing.Any())
                 secrets = secrets.Except(existing).ToArray();
 
-            await repository.SaveAsync(secrets.Concat(new[] { secret }));
+            await _repository.SaveAsync(secrets.Concat(new[] { secret }));
         }
     }
 }

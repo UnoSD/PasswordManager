@@ -66,7 +66,7 @@ namespace Paccia
         }
 
         // TODO: Move to test project, should not be used outside testing.
-        internal static SecureString ToSecureString(this string value)
+        public static SecureString ToSecureString(this string value)
         {
             var secureString = new SecureString();
 
