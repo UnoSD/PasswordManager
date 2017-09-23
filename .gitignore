@@ -243,3 +243,6 @@ ModelManifest.xml
 
 # Secrets file
 secrets
+
+# Rider settings
+/.idea
