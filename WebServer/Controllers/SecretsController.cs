@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using Paccia;
 
 namespace WebServer.Controllers
@@ -13,23 +15,37 @@ namespace WebServer.Controllers
     public class SecretsController : Controller
     {
         readonly Repository<Secret> _repository;
+        readonly IMemoryCache _cache;
 
-        public SecretsController(Repository<Secret> repository) => _repository = repository;
+        public SecretsController(Repository<Secret> repository, IMemoryCache cache)
+        {
+            _repository = repository;
+            _cache = cache;
+        }
 
         [HttpGet("{url}")]
         public async Task<JsonResult> GetAsync(string url)
         {
             var sourceUri = new Uri(WebUtility.UrlDecode(url));
 
-            var secrets = await _repository.LoadAsync();
+            var cacheRefreshed = false;
 
-            // At some point will return the whole secret (or selected fields/secrets
-            // and we will map which field/password goes to which page control.
+            var secrets = await _cache.GetOrCreateAsync("secrets", ce =>
+            {
+                cacheRefreshed = true;
+                return _repository.LoadAsync();
+            });
 
-            // Introduce property for Secret instead of First(): MainSecretKey.
-            var secret = secrets.FirstOrDefault(s => s.Url == sourceUri.Host)
-                               ?.Secrets
-                                .FirstOrDefault();
+            var secret = FindSecret(secrets, sourceUri);
+
+            if (secret == null && !cacheRefreshed)
+            {
+                secrets = await _repository.LoadAsync();
+
+                _cache.Set("secrets", secrets);
+
+                secret = FindSecret(secrets, sourceUri);
+            }
 
             return new JsonResult(new
             {
@@ -37,6 +53,11 @@ namespace WebServer.Controllers
                 password = secret?.Value ?? "NF"
             });
         }
+
+        static KeyValuePair<string, string>? FindSecret(IReadOnlyCollection<Secret> secrets, Uri sourceUri) =>
+            secrets.FirstOrDefault(s => s.Url == sourceUri.Host)?
+                   .Secrets
+                   .FirstOrDefault();
 
         [HttpPut("{url}")]
         public async Task PutAsync([ModelBinder(BinderType = typeof(SecretModelBinder))]Secret secret, string url)
