@@ -30,34 +30,39 @@ namespace WebServer.Controllers
 
             var cacheRefreshed = false;
 
-            var secrets = await _cache.GetOrCreateAsync("secrets", ce =>
+            var allSecrets = await _cache.GetOrCreateAsync("secrets", ce =>
             {
                 cacheRefreshed = true;
                 return _repository.LoadAsync();
             });
 
-            var secret = FindSecret(secrets, sourceUri);
+            var matchingSecrets = GetSecrets(allSecrets, sourceUri);
 
-            if (secret == null && !cacheRefreshed)
+            if (!matchingSecrets.Any() && !cacheRefreshed)
             {
-                secrets = await _repository.LoadAsync();
+                allSecrets = await _repository.LoadAsync();
 
-                _cache.Set("secrets", secrets);
+                _cache.Set("secrets", allSecrets);
 
-                secret = FindSecret(secrets, sourceUri);
+                matchingSecrets = GetSecrets(allSecrets, sourceUri);
             }
 
-            return new JsonResult(new
+            return matchingSecrets.Count < 2 ?
+
+            new JsonResult(new
             {
-                username = secret?.Key ?? $"Not found",
-                password = secret?.Value ?? "NF"
+                username = matchingSecrets.SingleOrDefault().Key ?? $"Not found",
+                password = matchingSecrets.SingleOrDefault().Value ?? "NF"
+            }) : new JsonResult(new
+            {
+                keys = matchingSecrets.Keys
             });
         }
 
-        static KeyValuePair<string, string>? FindSecret(IReadOnlyCollection<Secret> secrets, Uri sourceUri) =>
-            secrets.FirstOrDefault(s => s.Url == sourceUri.Host)?
-                   .Secrets
-                   .FirstOrDefault();
+        static IDictionary<string, string> GetSecrets(IReadOnlyCollection<Secret> secrets, Uri sourceUri) =>
+            secrets.Where(s => s.Url == sourceUri.Host)
+                   .SelectMany(s => s.Secrets)
+                   .ToDictionary(p => p.Key, p => p.Value);
 
         [HttpPut("{url}")]
         public async Task PutAsync([ModelBinder(BinderType = typeof(SecretModelBinder))]Secret secret, string url)
